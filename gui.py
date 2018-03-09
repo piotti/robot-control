@@ -5,6 +5,8 @@ from ble.client import Dongle as BleDongle
 from pumps.sock import PumpController 
 from valves.modbus import ValveController
 
+from reactor import ReactorDisplay
+
    
 class MainWindow:
 
@@ -13,6 +15,9 @@ class MainWindow:
         master.title("Robot Control")
         master.minsize(width=1400, height=700)
         master.protocol("WM_DELETE_WINDOW", self.close)
+
+        rd = ReactorDisplay(master, 1)
+
 
 
 
