@@ -1,0 +1,27 @@
+{"config": {
+
+
+	"festo_ip": "192.168.1.6",
+	"pumps_ip": "192.168.1.12",
+	"pumps_port": 4001,
+	"valve_names": [
+		"Reactor 1",
+		"Reactor 2",
+		"Reactor 3",
+		"Reactor Stack",
+		"Valve 5",
+		"Valve 6",
+		"Valve 7",
+		"Valve 8",
+		"Valve 9",
+		"Valve 10",
+		"Valve 11",
+		"Valve 12",
+		"Valve 13",
+		"Valve 14",
+		"Valve 15",
+		"Valve 16"
+	]
+
+	}
+}
