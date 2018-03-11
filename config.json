@@ -1,0 +1,51 @@
+{
+	"stacks": {
+        "stack 1": {
+           "slots": ["1", "2", "3"],
+           "close reactor festo": 0,
+           "close fitting actuator festo": 0
+        },
+        "stack 2": {
+           "slots": ["4", "5", "6", "7", "8"],
+           "close reactor festo": 0,
+           "close fitting actuator festo": 0
+        }
+    },
+    "slots": {
+    	"1": {
+    		"jaw festo":1
+    	},
+    	"2": {
+    		"jaw festo":2
+    	},
+    	"3": {
+    		"jaw festo":3
+    	},
+    	"4": {
+    		"jaw festo":4
+    	},
+    	"5": {
+    		"jaw festo":5
+    	},
+    	"6": {
+    		"jaw festo":6
+    	},
+    	"7": {
+    		"jaw festo":7
+    	},
+    	"8": {
+    		"jaw festo":8
+    	}
+    },
+
+	"festo_ip": "192.168.1.6",
+	"pumps_ip": "192.168.1.12",
+	"pumps_port": 4001,
+	"ble dongle port": "COM19",
+	"reactor types": ["R1", "R2", "R3"],
+	"pump types": {
+		"1": "type 1",
+		"2": "type 2",
+		"3": "type 3"
+	}
+}
