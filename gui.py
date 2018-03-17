@@ -1,7 +1,7 @@
 from Tkinter import *
 import tkMessageBox as messagebox
 
-from controller import Controller
+from test_controller import Controller
 
 from reactor import ReactorDisplay, ValveButton
 

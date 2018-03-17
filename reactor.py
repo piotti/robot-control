@@ -3,11 +3,11 @@ import tkMessageBox as messagebox
 
 from cfg import CFG
 
-from controller import *
+from test_controller import *
 
 import time
 
-from ble.client import ble_decode
+# from ble.client import ble_decode
 
 from graph import add_temp_set, add_pressure_set, TEMP_SETS, PRESSURE_SETS
 
@@ -237,7 +237,7 @@ class ReactorDisplay:
 		self.mixing.bind("<ButtonRelease-1>", self.on_mixing_change_done)
 		self.mixing.grid(row=4, column=0, padx=1, pady=0, sticky=N+W)
 		# 'Pressure'
-		self.pressure = Label(f8, text='Pressure:',
+		self.pressure = Label(f8, text='Press:',
 					height=1, width=12, bd=2, relief='ridge', anchor=W)
 		self.pressure.grid(row=1, column=1, padx=1, pady=5)
 		# 'Temp'
@@ -346,8 +346,8 @@ class ReactorDisplay:
 			if char.name == 'Temperature':
 				print 'temp', value, type(value)
 				if value < 30000:
-					value = '%.2f' % (value/100)
-				# self.temp['text'] = 'Temp: %d' % value
+					value /= 100.
+				self.temp['text'] = 'Temp: %.2f' % value
 				print 'set temp'
 				# Update graph
 				if self.temp_set is None:
@@ -357,7 +357,7 @@ class ReactorDisplay:
 				self.temp_set.add(value)
 				print 'added'
 			elif char.name == 'Pressure':
-				self.pressure['text'] = 'Pressure: %d psi' % value
+				self.pressure['text'] = 'Press: %d psi' % value
 				# Update graph
 				if self.pressure_set is None:
 					self.pressure_set = add_pressure_set('Reactor %d' % self.idx)

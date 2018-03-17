@@ -24,7 +24,7 @@ START_TIME = None
 import random
 def addNewPoint():
     global count
-    TEMP_SETS[0].add(random.randint(0, 30) )
+    TEMP_SETS[0].add(random.randint(0, 3000) )
     PRESSURE_SETS[0].add(random.randint(0, 30))
 
 
@@ -88,10 +88,10 @@ class Graph():
         self.live_scroll.set(1)
         tk.Checkbutton(master, text='Live Scroll', variable=self.live_scroll).pack()
 
-        self.a_xlim = (0,60)
-        self.a_ylim = (0,50)
-        self.b_xlim = (0,60)
-        self.b_ylim = (0,50)
+        self.a_xlim = (0,120)
+        self.a_ylim = (0,300)
+        self.b_xlim = (0,120)
+        self.b_ylim = (0,200)
 
 
 
@@ -143,11 +143,15 @@ class Graph():
         yMax = 0
         yMin = 0
         for ds in TEMP_SETS:
-            series.append(ds.ts)
-            series.append(ds.ys)
-            tMax = max(ds.ts[-1], tMax) if ds.ts else 0
+            if not ds.ts:
+                continue
+            series.append(ds.ts + [time.time()-START_TIME])
+            series.append(ds.ys + [ds.ys[-1]])
+            tMax = max(ds.ts[-1], tMax)
             yMax = max(yMax, ds.ymax)
             yMin = min(yMin, ds.ymin)
+            # Add placeholder data point at end to make line go all the way to current time
+
 
         a.clear()
         a.plot(*series)
@@ -169,7 +173,7 @@ class Graph():
             # print 'setting ylim to ', ylim
             # Set vertical scaling
             if self.live_scroll.get():
-                self.a_ylim = (0,50)#(min(yMin, self.a_ylim[0]), max(yMax, self.a_ylim[1]))
+                self.a_ylim = (0,300)#(min(yMin, self.a_ylim[0]), max(yMax, self.a_ylim[1]))
             a.set_ylim(self.a_ylim)
         else:
             lim = a.get_ylim()
@@ -184,8 +188,10 @@ class Graph():
         yMax = 0
         yMin = 0
         for ds in PRESSURE_SETS:
-            series.append(ds.ts)
-            series.append(ds.ys)
+            if not ds.ts:
+                continue
+            series.append(ds.ts + [time.time()-START_TIME])
+            series.append(ds.ys + [ds.ys[-1]])
             tMax = max(ds.ts[-1], tMax) if ds.ts else 0
             yMax = max(yMax, ds.ymax)
             yMin = min(yMin, ds.ymin)
@@ -210,7 +216,7 @@ class Graph():
             # print 'setting ylim to ', ylim
              # Set vertical scaling
             if self.live_scroll.get():
-                self.b_ylim = (0,50)#(min(yMin, self.b_ylim[0]), max(yMax, self.b_ylim[1]))
+                self.b_ylim = (0,200)#(min(yMin, self.b_ylim[0]), max(yMax, self.b_ylim[1]))
             b.set_ylim(self.b_ylim)
         else:
             lim = b.get_ylim()

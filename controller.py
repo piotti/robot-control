@@ -1,5 +1,6 @@
 
 from ble.client import Dongle as BleDongle
+from ble.client import ble_decode as bled
 from pumps.sock import PumpController 
 from valves.modbus import ValveController
 
@@ -15,10 +16,9 @@ import time
 
 from cfg import CFG
 
-def hi():
-	print 'hi'
-	time.sleep(5)
-	print 'hello'
+def ble_decode(value, msbf=False):
+	bled(value, msfb)
+
 
 class Controller:
 	def __init__(self):
