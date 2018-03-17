@@ -9,6 +9,8 @@ import time
 
 from ble.client import ble_decode
 
+from graph import add_temp_set, add_pressure_set, TEMP_SETS, PRESSURE_SETS
+
 
 class ValveButton:
 	def __init__(self, c, cnsl, addr, *args, **kwargs):

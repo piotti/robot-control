@@ -7,6 +7,10 @@ from reactor import ReactorDisplay, ValveButton
 
 from cfg import CFG
 
+from graph import Graph, fig
+
+import matplotlib.animation as animation
+
 class StackWindow:
     def __init__(self, master, idx, c):
         self.master = master
@@ -57,8 +61,16 @@ class MainWindow:
     def __init__(self, master):
         self.master = master
         master.title("Robot Control")
-        master.minsize(width=200, height=100)
+        master.minsize(width=1000, height=800)
         master.protocol("WM_DELETE_WINDOW", self.close)
+
+        # Display graph
+        self.graph = Graph(master)
+
+        
+        # self.start()       
+
+    def start(self):
 
         # Connect to controllers
         c = Controller()
@@ -79,8 +91,8 @@ class MainWindow:
 
     def close(self):
         print 'closing...'
-        self.c.valve_disconnect()
-        self.c.pumps_disconnect()
+        # self.c.valve_disconnect()
+        # self.c.pumps_disconnect()
         self.master.destroy()
         exit()
 
@@ -88,6 +100,12 @@ class MainWindow:
 
 
 if __name__ == '__main__':
+    # Create GUI
     root = Tk()
     my_gui = MainWindow(root)
+
+    # Start graph animation
+    ani = animation.FuncAnimation(fig, my_gui.graph.animate, interval=1000)
+
+    # Run program loop
     root.mainloop()
