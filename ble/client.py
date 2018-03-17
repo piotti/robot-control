@@ -7,15 +7,6 @@ import sys
 from bgapi.module import BlueGigaModule, GATTCharacteristic, GATTService, BlueGigaClient, BlueGigaServer, BLEConnection
 from bgapi.cmd_def import gap_discoverable_mode, gap_connectable_mode
 
-PORT='COM5'
-
-PSOCS = {
-    'PSoC 00392': '00a050e17c5f',
-    'PSoC 00795': '00a050a47a8d',
-    'PSOC 00759': '00a050a479cb',
-	'PSOC 00378': '00a050e1745d',
-}
-
 CHARACTERISTICS = {
     '2a00': {'name': 'Device Name', 'type': 'text'},
     'ab29': {'name': 'Temperature', 'type': 'int'},
@@ -77,17 +68,18 @@ class Dongle(BlueGigaClient):
 
         self.connections = {}
 
-    def connect_to_reactor(self, psoc):
+    def connect_to_reactor(self, addr):
         # Scan for psoc
         responses = self.scan_all(timeout=10)
         target = None
         for resp in responses:
-            if ble_decode(resp.get_sender_address()) == PSOCS[psoc]:
-                print 'found ' + psoc
+            if ble_decode(resp.get_sender_address()) == addr:
+                print 'found ' + addr
                 target = resp
                 break
         else:
-            raise Exception("No Advertisements received from psoc")
+            # No Advertisements received from psoc
+            return None
 
         # Create new conenction
         connection = self.connect(target=target)
@@ -96,7 +88,7 @@ class Dongle(BlueGigaClient):
         rc = ReactorConnection(connection)
 
         # Add to table of connections
-        self.connections[psoc] = rc
+        self.connections[addr] = rc
 
         return rc
 
@@ -131,56 +123,28 @@ class ReactorConnection:
             except Exception:
                 print 'it didnt have a CCCD'
 
-        rcs = []
+        rcs = {}
 
         for char in self.connection.get_characteristics():
             uuid = ble_decode(char.uuid)
             if uuid in CHARACTERISTICS:
                 rc = ReactorCharacteristic(char, CHARACTERISTICS[uuid]['name'], CHARACTERISTICS[uuid]['type'])
-                rcs.append(rc)
+                rcs[uuid] = rc
             else:
                 print uuid
 
         return rcs
 
-
-def connect():
-
-
-    ble_client = BlueGigaClient(port=PORT, baud=115200, timeout=0.1)
-    # BLE Client configuration and start scanning
-    ble_client.get_module_info()
-    ble_client.reset_ble_state()
-    ble_client.delete_bonding()
-    ble_client.allow_bonding()
-    responses = ble_client.scan_all(timeout=2)
-
-    if len(sys.argv)>1 and sys.argv[1] == 'scan':
-        devs = {}
-        for resp in responses:
-            if hasattr(resp, 'data') and resp.data not in devs:
-                devs[resp.data] = resp
-        for d in devs:
-            print d, ':',  devs[d].__dict__
-        exit()
+    def write(self, handle, data, typ):
+        if typ == 'int':
+            data = hex(int(data))[2:]
+        elif typ == 'text':
+            data = ''.join([hex(ord(e))[2:] for e in data])
+        data = hex_to_string(data)
+        print 'sending', data
+        self.connection.write_by_handle(handle+1, data)
 
 
-    for resp in responses:
-        if resp.data == psoc:
-            print 'found psoc'
-            target = resp
-            break
-    else:
-        raise Exception("No Advertisements received from psoc")
-    connection = ble_client.connect(target=target)
-
-    oob_data = "000102030405060708090A0B0C0D0E0F"
-    ble_client.set_out_of_band_data(oob_data)
-    # connection.request_encryption(bond=True)
-    connection.read_by_group_type(group_type=GATTService.PRIMARY_SERVICE_UUID)
-    # connection.read_by_group_type(group_type=GATTService.SECONDARY_SERVICE_UUID)
-
-    return ble_client, connection
 
 def get_services(gui, connection):
 
@@ -210,18 +174,5 @@ def get_services(gui, connection):
                 gui.add_characteristic(uuid, CHARACTERISTICS[uuid])
         else:
             print uuid
-
-    
-
-
-if __name__ == '__main__':
-    connect(None)
-
-
-
-
-
-
-
 
 

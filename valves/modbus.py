@@ -5,6 +5,7 @@ from pymodbus.client.sync import ModbusTcpClient as ModbusClient
 
 class ValveController:
 	def __init__(self, host='192.168.1.6'):
+		print 'connecting to Festo...'
 		self.client = ModbusClient(host=host)
 		if not self.client.connect():
 			print('Couldn\'t connect')
@@ -32,4 +33,5 @@ class ValveController:
 		return self.client.read_coils(0, 16).bits
 
 	def stop(self):
+		print 'Disconnecting from Festo...'
 		self.client.close()

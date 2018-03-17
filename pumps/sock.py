@@ -10,6 +10,7 @@ class PumpController:
 		self.ip = ip
 		self.port=port
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print 'connecting to pumps'
 		try:
 			self.s.connect((ip, port))
 		except Exception:

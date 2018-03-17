@@ -1,43 +1,55 @@
 from Tkinter import *
 import tkMessageBox as messagebox
 
-# from ble.client import Dongle as BleDongle
-# from pumps.sock import PumpController 
-# from valves.modbus import ValveController
+from controller import Controller
 
 from reactor import ReactorDisplay, ValveButton
 
 from cfg import CFG
 
 class StackWindow:
-    def __init__(self, master, idx):
+    def __init__(self, master, idx, c):
         self.master = master
         self.idx = idx
+        self.c = c
         master.title("Robot Control: Reactor Stack %d" % idx)
-        master.minsize(width=1600, height=1200)
-        master.protocol("WM_DELETE_WINDOW", self.close)
+        master.minsize(width=1600, height=800)
 
 
         slots = CFG['stacks']['stack %d' % idx]['slots']
 
+        # Make console
+        self.console = Text(master, height=6, bg='light grey', state = DISABLED)
+        self.console.grid(row=6, column=0, columnspan=3, pady=10, sticky=E)
+        sb = Scrollbar(self.master)
+        sb.grid(row=6, column=3, sticky=N+S+W)
+        sb.config(command=self.console.yview)
+        self.console.config(yscrollcommand=sb.set)
+
         # 'Close Reactor Stack'
-        ValveButton(master, text='Close Reactor Stack %d' % idx, height=len(slots)*8).grid(row=0, rowspan=len(slots), column=0)
+        ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close reactor stack festo'], master, text='Close Reactor Stack %d' % idx, height=len(slots)*10).grid(row=0, rowspan=len(slots), column=0)
 
         # Reactors
         for i, e in enumerate(slots):
             f = Frame(master)
             f.grid(row=i, column=1, sticky=N)
-            rd = ReactorDisplay(f, int(e))
-        Label(master, height=8, width=12).grid(row=5, column=1, stick=W)
+            rd = ReactorDisplay(f, int(e), c, self.printToConsole)
 
 
         # 'Close Fitting Actuator'
-        ValveButton(master, text='Close Fitting Actuator', height=len(slots)*8).grid(row=0, rowspan=len(slots), column=2)
+        ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close fitting actuator festo'], master, text='Close Fitting Actuator', height=len(slots)*10).grid(row=0, rowspan=len(slots), column=2)
 
+        # Add pumps callback to print to console
+        self.c.add_pump_callback(lambda msg: self.printToConsole('Pump message received: %s' % msg))
 
-    def close(self):
-        self.master.destroy()
-        exit()
+       
+
+    def printToConsole(self, msg):
+        self.console.config(state=NORMAL)
+        self.console.insert(END, '\n' + str(msg) )
+        self.console.config(state=DISABLED)
+        self.console.see(END)
+
 
    
 class MainWindow:
@@ -45,16 +57,30 @@ class MainWindow:
     def __init__(self, master):
         self.master = master
         master.title("Robot Control")
-        master.minsize(width=100, height=100)
+        master.minsize(width=200, height=100)
         master.protocol("WM_DELETE_WINDOW", self.close)
 
+        # Connect to controllers
+        c = Controller()
+        c.valve_connect()
+        c.pumps_connect()
+        c.ble_connect()
+        self.c = c
+
         # Stack Windows
-        s1 = StackWindow(Toplevel(self.master), 1)
-        s2 = StackWindow(Toplevel(self.master), 2)
+        tl1 = Toplevel(self.master)
+        tl1.protocol("WM_DELETE_WINDOW", self.close)
+        s1 = StackWindow(tl1, 1, c)
+        tl2 = Toplevel(self.master)
+        tl2.protocol("WM_DELETE_WINDOW", self.close)
+        s2 = StackWindow(tl2, 2, c)
 
 
 
     def close(self):
+        print 'closing...'
+        self.c.valve_disconnect()
+        self.c.pumps_disconnect()
         self.master.destroy()
         exit()
 

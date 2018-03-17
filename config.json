@@ -2,50 +2,168 @@
 	"stacks": {
         "stack 1": {
            "slots": ["1", "2", "3"],
-           "close reactor festo": 0,
+           "close reactor stack festo": 4,
            "close fitting actuator festo": 0
         },
         "stack 2": {
            "slots": ["4", "5", "6", "7", "8"],
-           "close reactor festo": 0,
+           "close reactor stack festo": 0,
            "close fitting actuator festo": 0
         }
     },
     "slots": {
     	"1": {
-    		"jaw festo":1
+
+    		"jaw":1,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": 0,
+            "port 2": 1,
+            "port 3": 2,
+            "port 4": 3
     	},
     	"2": {
-    		"jaw festo":2
+    		"jaw":2,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": -1,
+            "port 2": 4,
+            "port 3": 5,
+            "port 4": 6
     	},
     	"3": {
-    		"jaw festo":3
+    		"jaw":3,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": -1,
+            "port 2": 7,
+            "port 3": 8,
+            "port 4": 9
     	},
     	"4": {
-    		"jaw festo":4
+    		"jaw":0,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": 10,
+            "port 2": 11,
+            "port 3": 12,
+            "port 4": 13
     	},
     	"5": {
-    		"jaw festo":5
+    		"jaw":0,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": -1,
+            "port 2": 14,
+            "port 3": 15,
+            "port 4": 16
     	},
     	"6": {
-    		"jaw festo":6
+    		"jaw":0,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": -1,
+            "port 2": 17,
+            "port 3": 18,
+            "port 4": 19
     	},
     	"7": {
-    		"jaw festo":7
+    		"jaw":0,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": -1,
+            "port 2": 20,
+            "port 3": 21,
+            "port 4": 22
     	},
     	"8": {
-    		"jaw festo":8
+    		"jaw":0,
+            "valve 1": 0,
+            "valve 2": 0,
+            "valve 3": 0,
+            "valve 4": 0,
+            "outlet": 0,
+            "sep": 0,
+
+            "port 1": -1,
+            "port 2": 23,
+            "port 3": 24,
+            "port 4": 25
     	}
+    },
+    "tubes": {
+        "1": {
+            "type": "T1",
+            "ID": "a",
+            "volume": 100
+        },
+        "2": {
+            "type": "T1",
+            "ID": "b",
+            "volume": 100
+        },
+        "3": {
+            "type": "T1",
+            "ID": "c",
+            "volume": 100
+        }
     },
 
 	"festo_ip": "192.168.1.6",
 	"pumps_ip": "192.168.1.12",
 	"pumps_port": 4001,
 	"ble dongle port": "COM19",
-	"reactor types": ["R1", "R2", "R3"],
-	"pump types": {
-		"1": "type 1",
-		"2": "type 2",
-		"3": "type 3"
-	}
+	"reactor types": {
+        "1ml (00392)": {
+            "ble addr": "00a050e17c5f",
+            "position": 1
+        },
+        "1ml (00795)": {
+            "ble addr": "00a050a47a8d",
+            "position": 2
+        },
+        "1ml (00759)": {
+            "ble addr": "00a050a479cb",
+            "position": 3
+        },
+        "1ml (00378)": {
+            "ble addr": "00a050e1745d",
+            "position": 4
+        }
+    }
 }
