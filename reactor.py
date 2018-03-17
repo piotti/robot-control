@@ -84,6 +84,10 @@ class ReactorDisplay:
 		self.timeout = 10
 		self.time = self.timeout
 
+		# Create data series objects for pressure and temp graphing
+		self.temp_set = None
+		self.pressure_set = None
+
 		###   COLUMN 0   ###
 		f0 = Frame(master)
 		f0.grid(row=idx-1, column=0, padx=5, pady=1, sticky=N)
@@ -340,11 +344,24 @@ class ReactorDisplay:
 
 			# Write to screen to pertinent fields
 			if char.name == 'Temperature':
+				print 'temp', value, type(value)
 				if value < 30000:
 					value = '%.2f' % (value/100)
-				self.temp['text'] = 'Temp: %d' % value
+				# self.temp['text'] = 'Temp: %d' % value
+				print 'set temp'
+				# Update graph
+				if self.temp_set is None:
+					print 'creating'
+					self.temp_set = add_temp_set('Reactor %d' % self.idx)
+					print 'done creating'
+				self.temp_set.add(value)
+				print 'added'
 			elif char.name == 'Pressure':
 				self.pressure['text'] = 'Pressure: %d psi' % value
+				# Update graph
+				if self.pressure_set is None:
+					self.pressure_set = add_pressure_set('Reactor %d' % self.idx)
+				self.pressure_set.add(value)
 
 		return cb
 

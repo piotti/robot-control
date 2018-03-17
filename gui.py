@@ -68,7 +68,7 @@ class MainWindow:
         self.graph = Graph(master)
 
         
-        # self.start()       
+        self.start()       
 
     def start(self):
 
@@ -91,8 +91,8 @@ class MainWindow:
 
     def close(self):
         print 'closing...'
-        # self.c.valve_disconnect()
-        # self.c.pumps_disconnect()
+        self.c.valve_disconnect()
+        self.c.pumps_disconnect()
         self.master.destroy()
         exit()
 

@@ -52,6 +52,9 @@ class DataSet:
         self.ymax = max(y, self.ymax)
         self.ymin = min(y, self.ymin)
 
+    def __repr__(self):
+        return str((self.ts, self.ys))
+
 TEMP_SETS = []
 PRESSURE_SETS = []
 
@@ -92,6 +95,8 @@ class Graph():
 
 
 
+
+
     # Declare and register callbacks
     def on_a_xlims_change(self, axes):
         lim = a.get_xlim()
@@ -128,7 +133,9 @@ class Graph():
 
 
     def animate(self, i):
-        addNewPoint()
+        # addNewPoint()
+
+        print 'datasets', TEMP_SETS
 
         ### Configure Temp Subplot ###
         series = []
@@ -138,7 +145,7 @@ class Graph():
         for ds in TEMP_SETS:
             series.append(ds.ts)
             series.append(ds.ys)
-            tMax = max(ds.ts[-1], tMax)
+            tMax = max(ds.ts[-1], tMax) if ds.ts else 0
             yMax = max(yMax, ds.ymax)
             yMin = min(yMin, ds.ymin)
 
@@ -162,7 +169,7 @@ class Graph():
             # print 'setting ylim to ', ylim
             # Set vertical scaling
             if self.live_scroll.get():
-                self.a_ylim = (yMin, yMax)
+                self.a_ylim = (0,50)#(min(yMin, self.a_ylim[0]), max(yMax, self.a_ylim[1]))
             a.set_ylim(self.a_ylim)
         else:
             lim = a.get_ylim()
@@ -179,7 +186,7 @@ class Graph():
         for ds in PRESSURE_SETS:
             series.append(ds.ts)
             series.append(ds.ys)
-            tMax = max(ds.ts[-1], tMax)
+            tMax = max(ds.ts[-1], tMax) if ds.ts else 0
             yMax = max(yMax, ds.ymax)
             yMin = min(yMin, ds.ymin)
         b.clear()
@@ -203,7 +210,7 @@ class Graph():
             # print 'setting ylim to ', ylim
              # Set vertical scaling
             if self.live_scroll.get():
-                self.b_ylim = (yMin, yMax)
+                self.b_ylim = (0,50)#(min(yMin, self.b_ylim[0]), max(yMax, self.b_ylim[1]))
             b.set_ylim(self.b_ylim)
         else:
             lim = b.get_ylim()
