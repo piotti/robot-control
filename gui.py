@@ -1,5 +1,6 @@
 from Tkinter import *
 import tkMessageBox as messagebox
+import tkFont
 
 from test_controller import Controller
 
@@ -10,6 +11,55 @@ from cfg import CFG
 from graph import Graph, fig
 
 import matplotlib.animation as animation
+
+import ttk
+
+class StackWindow2:
+    def __init__(self, master, idx, c, console):
+        self.master = master
+        self.idx = idx
+        self.c = c
+        self.console = console
+        # master.title("Robot Control: Reactor Stack %d" % idx)
+        # master.minsize(width=1600, height=800)
+
+
+        slots = CFG['stacks']['stack %d' % idx]['slots']
+
+
+
+        # 'Close Reactor Stack'
+        ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close reactor stack festo'],
+            master, text='Close Reactor Stack %d' % idx).grid(
+            row=0, column=0, sticky=N+S)
+
+        # Reactors
+        nb = ttk.Notebook(master)
+        for i, e in enumerate(slots):
+            # f = Frame(master)
+            page = ttk.Frame(nb)
+            rd = ReactorDisplay(page, int(e), c, self.printToConsole)
+            nb.add(page, text='Reactor ' + e)
+        nb.grid(row=0, column=1)
+
+
+
+        # 'Close Fitting Actuator'
+        ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close fitting actuator festo'],
+            master, text='Close Fitting Actuator').grid(
+            row=0, column=2, sticky=N+S)
+
+        # Add pumps callback to print to console
+        self.c.add_pump_callback(lambda msg: self.printToConsole('Pump message received: %s' % msg))
+
+       
+
+    def printToConsole(self, msg):
+        self.console.config(state=NORMAL)
+        self.console.insert(END, '\n' + str(msg) )
+        self.console.config(state=DISABLED)
+        self.console.see(END)
+
 
 class StackWindow:
     def __init__(self, master, idx, c):
@@ -79,13 +129,30 @@ class MainWindow:
         c.ble_connect()
         self.c = c
 
-        # Stack Windows
         tl1 = Toplevel(self.master)
         tl1.protocol("WM_DELETE_WINDOW", self.close)
-        s1 = StackWindow(tl1, 1, c)
-        tl2 = Toplevel(self.master)
-        tl2.protocol("WM_DELETE_WINDOW", self.close)
-        s2 = StackWindow(tl2, 2, c)
+
+        # Make console
+        self.console = Text(tl1, height=6, bg='light grey', state = DISABLED)
+        self.console.grid(row=4, column=0, pady=10, sticky=E)
+        sb = Scrollbar(tl1)
+        sb.grid(row=4, column=1, sticky=N+S+W)
+        sb.config(command=self.console.yview)
+        self.console.config(yscrollcommand=sb.set)
+
+        # Stack Frames
+        Label(tl1, text='STACK 1', anchor=S).grid(row=0, column=0, columnspan=2, pady=10)
+        f1 = Frame(tl1)
+        s1 = StackWindow2(f1, 1, c, self.console)
+        f1.grid(row=1, column=0)
+        f2 = Frame(tl1)
+        # tl2 = Toplevel(self.master)
+        # tl2.protocol("WM_DELETE_WINDOW", self.close)
+        Label(tl1, text='STACK 2', anchor=S).grid(row=2, column=0, columnspan=2, pady=20)
+        s2 = StackWindow2(f2, 2, c, self.console)
+        f2.grid(row=3, column=0)
+
+        
 
 
 

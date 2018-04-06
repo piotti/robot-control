@@ -9,6 +9,8 @@ import Tkinter as tk
 
 import time
 
+import os
+
 
 LARGE_FONT= ("Verdana", 12)
 style.use("ggplot")
@@ -29,15 +31,67 @@ def addNewPoint():
 
 
 
+class FileWriter:
+    def __init__(self):
+        self.started = False
+
+        self.data_queue = []
+
+
+    def start(self):
+        if self.started:
+            return
+        self.started = True
+
+        # Check if folder data folder exists
+        date = time.strftime('%m-%d-%y')
+        if not os.path.isdir('logs/'+date):
+            # Create date folder
+            os.mkdir('logs/'+date)
+        # create file name
+        self.fpath = 'logs/' + date + '/' + time.strftime('%m-%d-%y %H %M')
+        # Check if file exists
+        if os.path.isfile(self.fpath+'.txt'):
+            # Start iterating through all files with this timestamp
+            count = 1
+            while os.path.isfile('%s (%d).txt' % (self.fpath, count)):
+                count += 1
+            self.fpath = '%s (%d)' % (self.fpath, count)
+        # Create and open new file
+        self.file = open(self.fpath+'.txt', 'w')
+        print 'created file %s' % self.fpath+'.txt'
+
+    def queue(self, typ, name, y, t):
+        self.data_queue.append( (typ, name, y, t) )
+
+    def write(self): 
+        if not self.started:
+            self.start()   
+        # Write queued data to file
+        if self.data_queue:
+            # open file
+            file = open(self.fpath+'.txt', 'w')
+            for line in self.data_queue:
+                file.write('%s %s %.3f %.2f\n' % line)
+            file.close()
+
+
+fw = FileWriter()
+
+
+
+
 class DataSet:
 
-    def __init__(self, name):
+    def __init__(self, typ, name):
+        self.typ = typ
         self.name = name
         self.ts = []
         self.ys = []
 
         self.ymax = 0
         self.ymin = 0
+
 
     def add(self, y, t=None):
         if t is None:
@@ -52,6 +106,14 @@ class DataSet:
         self.ymax = max(y, self.ymax)
         self.ymin = min(y, self.ymin)
 
+        # Write to file
+        fw.queue(self.typ, self.name, y, t)
+
+        # If dataset more than 1000 points long, delete off end
+        if len(self.ts) > 1000:
+            self.ts.pop(0)
+            self.ys.pop(0)
+
     def __repr__(self):
         return str((self.ts, self.ys))
 
@@ -59,11 +121,11 @@ TEMP_SETS = []
 PRESSURE_SETS = []
 
 def add_temp_set(*args, **kwargs):
-    ds = DataSet(*args, **kwargs)
+    ds = DataSet('T', *args, **kwargs)
     TEMP_SETS.append(ds)
     return ds
 def add_pressure_set(*args, **kwargs):
-    ds = DataSet(*args, **kwargs)
+    ds = DataSet('P', *args, **kwargs)
     PRESSURE_SETS.append(ds)
     return ds
 
@@ -180,6 +242,9 @@ class Graph():
             self.a_ylim = lim[0], lim[1]
         a.callbacks.connect('xlim_changed', self.on_a_xlims_change)
         a.callbacks.connect('ylim_changed', self.on_a_ylims_change)
+
+        # Write to file
+        fw.write()
 
 
         ### Configure Pressure Subplot ###
