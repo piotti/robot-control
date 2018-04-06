@@ -11,6 +11,8 @@ import time
 
 import os
 
+from cfg import CFG
+
 
 LARGE_FONT= ("Verdana", 12)
 style.use("ggplot")
@@ -58,11 +60,25 @@ class FileWriter:
                 count += 1
             self.fpath = '%s (%d)' % (self.fpath, count)
         # Create and open new file
-        self.file = open(self.fpath+'.txt', 'w')
-        print 'created file %s' % self.fpath+'.txt'
+        # file = open(self.fpath+'.csv', 'w')
+        # print 'created file %s' % self.fpath+'.csv'
+        # # Create CVS header
+        # reactors = []
+        # for stack in CFG['stacks']:
+        #     for slot in CFG['stacks'][stack]['slots']:
+        #         reactors.append(slot)
+        # header = 'Time,','.join('P%s,T%s' % (r, r) for r in reactors)
+        # header = 'Time,' + header
+        # file.write(header + '\n')
+        # file.close()
+
+        # # get indicies of each reactor
+        # self.r_inds = {e:reactors.index(e) for e in reactors}
+
+
 
     def queue(self, typ, name, y, t):
-        self.data_queue.append( (typ, name, y, t) )
+        self.data_queue.append( (typ, name.replace(' ', '_'), y, t) )
 
     def write(self): 
         if not self.started:
@@ -86,6 +102,7 @@ class DataSet:
     def __init__(self, typ, name):
         self.typ = typ
         self.name = name
+        # self.num = name[8:]
         self.ts = []
         self.ys = []
 
@@ -107,7 +124,7 @@ class DataSet:
         self.ymin = min(y, self.ymin)
 
         # Write to file
-        fw.queue(self.typ, self.name, y, t)
+        fw.queue(self.typ, self.name, y, t-START_TIME)
 
         # If dataset more than 1000 points long, delete off end
         if len(self.ts) > 1000:
@@ -286,7 +303,7 @@ class Graph():
         else:
             lim = b.get_ylim()
             self.b_ylim = lim[0], lim[1]
-        b.callbacks.connect('xlim_changed', self.on_b_xlims_change)
+        # b.callbacks.connect('xlim_changed', self.on_b_xlims_change)
         b.callbacks.connect('ylim_changed', self.on_b_ylims_change)
 
 

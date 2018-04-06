@@ -13,6 +13,7 @@ from graph import Graph, fig
 import matplotlib.animation as animation
 
 import ttk
+from ttk import *
 
 class StackWindow2:
     def __init__(self, master, idx, c, console):
@@ -24,6 +25,8 @@ class StackWindow2:
         # master.minsize(width=1600, height=800)
 
 
+
+
         slots = CFG['stacks']['stack %d' % idx]['slots']
 
 
@@ -31,23 +34,23 @@ class StackWindow2:
         # 'Close Reactor Stack'
         ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close reactor stack festo'],
             master, text='Close Reactor Stack %d' % idx).grid(
-            row=0, column=0, sticky=N+S)
+            row=1, column=0, sticky=N+S+E+W)
 
         # Reactors
-        nb = ttk.Notebook(master)
+        nb = ttk.Notebook(master, padding=10)
         for i, e in enumerate(slots):
             # f = Frame(master)
             page = ttk.Frame(nb)
             rd = ReactorDisplay(page, int(e), c, self.printToConsole)
             nb.add(page, text='Reactor ' + e)
-        nb.grid(row=0, column=1)
+        nb.grid(row=0, column=0, columnspan=2)
 
 
 
         # 'Close Fitting Actuator'
         ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close fitting actuator festo'],
             master, text='Close Fitting Actuator').grid(
-            row=0, column=2, sticky=N+S)
+            row=1, column=1, sticky=N+S+E+W)
 
         # Add pumps callback to print to console
         self.c.add_pump_callback(lambda msg: self.printToConsole('Pump message received: %s' % msg))
@@ -60,7 +63,7 @@ class StackWindow2:
         self.console.config(state=DISABLED)
         self.console.see(END)
 
-
+'''
 class StackWindow:
     def __init__(self, master, idx, c):
         self.master = master
@@ -103,7 +106,7 @@ class StackWindow:
         self.console.insert(END, '\n' + str(msg) )
         self.console.config(state=DISABLED)
         self.console.see(END)
-
+'''
 
    
 class MainWindow:
@@ -140,17 +143,21 @@ class MainWindow:
         sb.config(command=self.console.yview)
         self.console.config(yscrollcommand=sb.set)
 
+        helv = tkFont.Font(family='Helvetica', size=14)
         # Stack Frames
-        Label(tl1, text='STACK 1', anchor=S).grid(row=0, column=0, columnspan=2, pady=10)
-        f1 = Frame(tl1)
+        f_out = Frame(tl1, borderwidth=3,  relief='ridge')
+        f_out.grid(row=0, column=0, padx=10, pady=20)
+        Label(f_out, text='STACK 1', anchor=S, font=helv).grid(row=0, column=0, columnspan=2,)
+        f1 = Frame(f_out)
         s1 = StackWindow2(f1, 1, c, self.console)
         f1.grid(row=1, column=0)
-        f2 = Frame(tl1)
-        # tl2 = Toplevel(self.master)
-        # tl2.protocol("WM_DELETE_WINDOW", self.close)
-        Label(tl1, text='STACK 2', anchor=S).grid(row=2, column=0, columnspan=2, pady=20)
+
+        f_out2 = Frame(tl1, borderwidth=3,  relief='ridge')
+        f_out2.grid(row=1, column=0, padx=10, pady=20)
+        f2 = Frame(f_out2)
+        Label(f_out2, text='STACK 2', anchor=S, font=helv).grid(row=0, column=0)
         s2 = StackWindow2(f2, 2, c, self.console)
-        f2.grid(row=3, column=0)
+        f2.grid(row=1, column=0)
 
         
 
