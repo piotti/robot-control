@@ -2,7 +2,7 @@ from Tkinter import *
 import tkMessageBox as messagebox
 import tkFont
 
-from test_controller import Controller
+from controller import Controller
 
 from reactor import ReactorDisplay, ValveButton
 
@@ -41,7 +41,7 @@ class StackWindow2:
         for i, e in enumerate(slots):
             # f = Frame(master)
             page = ttk.Frame(nb)
-            rd = ReactorDisplay(page, int(e), c, self.printToConsole)
+            rd = ReactorDisplay(page, int(e), c, self.printToConsole, idx)
             nb.add(page, text='Reactor ' + e)
         nb.grid(row=0, column=0, columnspan=2)
 

@@ -5,7 +5,7 @@ import tkMessageBox as messagebox
 
 from cfg import CFG
 
-from test_controller import *
+from controller import *
 
 import time
 
@@ -79,10 +79,11 @@ class ValveButton:
 
 class ReactorDisplay:
 
-	def __init__(self, master, idx, c, cnsl):
+	def __init__(self, master, idx, c, cnsl, stack_idx):
 		self.master = master
 		self.idx = idx
 		self.c = c
+		self.stack_idx = stack_idx
 
 		self.cnsl = cnsl
 
@@ -137,7 +138,7 @@ class ReactorDisplay:
 		f2 = Frame(master)
 		f2.grid(row=idx-1, column=2, padx=1, pady=1, sticky=N)
 		# 'Reactor Position'
-		self.position = Label(f2, text='Position:\n%d'%CFG["reactor types"][self.reactor_type.get()]['position'],
+		self.position = Label(f2, text='Position:\n%s'% str((CFG["reactor types"][self.reactor_type.get()]['x pos'],CFG["reactor types"][self.reactor_type.get()]['y pos'])),
 				 width=12, borderwidth=2, relief='ridge')
 		self.position.grid(row=0, rowspan=2, column=0, padx=1, pady=5)
 		# 'BLE ID'
@@ -261,9 +262,9 @@ class ReactorDisplay:
 		self.cnsl( val)
 		self.cnsl( 'on_reactor_type_change')
 		ble_addr = CFG['reactor types'][val]['ble addr']
-		position = CFG['reactor types'][val]['position']
+		position = CFG['reactor types'][val]['x pos'], CFG['reactor types'][val]['y pos']
 		self.ble_id['text'] = 'BLE ID:\n%s'% ble_addr
-		self.position['text'] = 'Position:\n%d'% position
+		self.position['text'] = 'Position:\n%s'% str(position)
 
 	def on_read_ble_id(self):
 		self.cnsl( 'on_read_ble_id')
@@ -387,16 +388,20 @@ class ReactorDisplay:
 
 	def on_move_to_storage(self):
 		reactor = self.reactor_type.get()
-		position = CFG['reactor types'][reactor]['position']
-		bay = self.idx - 1
-		self.cnsl('Moving reactor %s from bay slot %d to storage slot %d' % (reactor, bay, position))
+		# position = CFG['reactor types'][reactor]['position']
+		position = (CFG['reactor types'][reactor]['x pos'], CFG['reactor types'][reactor]['y pos'])
+		# bay = self.idx - 1
+		bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
+		self.cnsl('Moving reactor %s from bay slot %s to storage slot %s' % (reactor, str(bay), str(position)))
 		self.c.moveReactor(position, bay, -1)
 
 	def on_move_to_stack(self):
 		reactor = self.reactor_type.get()
-		position = CFG['reactor types'][reactor]['position']
-		bay = self.idx - 1
-		self.cnsl('Moving reactor %s from storage slot %d to bay slot %d' % (reactor, position, bay))
+		# position = CFG['reactor types'][reactor]['position']
+		position = (CFG['reactor types'][reactor]['x pos'], CFG['reactor types'][reactor]['y pos'])
+		# bay = self.idx - 1
+		bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
+		self.cnsl('Moving reactor %s from storage slot %s to bay slot %s' % (reactor, str(position), str(bay)))
 		self.c.moveReactor(position, bay, 1)
 
 	def make_port_connect_callback(self, idx):

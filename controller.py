@@ -4,11 +4,11 @@ from ble.client import ble_decode as bled
 from pumps.sock import PumpController 
 from valves.modbus import ValveController
 
-# import robot_use
+
 
 import sys
 sys.path.insert(0, 'C:\Users\ROB\Dropbox\Robotic_Toolbox\Robot\UR3')
-
+import robot_use
 
 
 import threading
@@ -63,12 +63,12 @@ class Controller:
 		print storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose
 
 		# Start thread
-		# t = threading.Thread(target=robot_use.moveReactor, args = (storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose))
-		# t.start()
+		t = threading.Thread(target=robot_use.moveReactor, args = (storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose))
+		t.start()
 
 	def movePipe(nearNum, farNum, direction, xDisp = .05, yDisp = .03):
 		print 'moving pipe'
 		print nearNum, farNum, direction, xDisp, yDisp
 
-		# t = threading.Thread(target=robot_use.movePipe, args = (nearNum, farNum, direction, xDisp, yDisp))
-		# t.start()
+		t = threading.Thread(target=robot_use.movePipe, args = (nearNum, farNum, direction, xDisp, yDisp))
+		t.start()
