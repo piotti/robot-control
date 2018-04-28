@@ -33,7 +33,7 @@ def update():
     if PRESSURE_CB:
         PRESSURE_CB(random.randint(0,50))
     time.sleep(1)
-    update()
+    # update()
 
 class PumpController:
     def __init__(self):

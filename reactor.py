@@ -101,8 +101,8 @@ class ReactorDisplay:
 		f0.grid(row=idx-1, column=0, padx=5, pady=1, sticky=N)
 		# "Reactor: Jaw 1"
 		ValveButton(c, cnsl, CFG['slots'][str(idx)]['jaw'], f0,
-				text='Reactor\nJaw %d' % idx,
-				command=self.on_jaw_close,  width=10).pack()
+				text='Reactor Jaw %d' % idx,
+				command=self.on_jaw_close,  width=15, height=6).pack(fill=BOTH)
 
 		
 
@@ -112,7 +112,7 @@ class ReactorDisplay:
 		# "Reactor Type"
 		rf = Frame(f1, borderwidth=2, relief='ridge')
 		rf.grid(row=0, rowspan=2, column=0, padx=1, pady=5)
-		Label(rf, text='Reactor Type:',  width=12).grid(
+		Label(rf, text='Reactor Type:',  width=24).grid(
 			row=0, column=0, padx=1, pady=0, )
 		self.reactor_type = StringVar(rf)
 		self.reactor_type.set(sorted(CFG["reactor types"].keys())[0])
@@ -126,10 +126,10 @@ class ReactorDisplay:
 		# 'SP Temp'
 		spf = Frame(f1, borderwidth=2, relief='ridge')
 		spf.grid(row=3, column=0)
-		Label(spf, text='SP:',
-				 width=6).grid(
+		Label(spf, text='Setpoint:', justify='center',
+				 width=12).grid(
 				row=0, column=0)
-		self.sp_temp = Entry(spf, width=6)
+		self.sp_temp = Entry(spf, width=12)
 		self.sp_temp.grid(row=0, column=1)
 
 
@@ -139,15 +139,15 @@ class ReactorDisplay:
 		f2.grid(row=idx-1, column=2, padx=1, pady=1, sticky=N)
 		# 'Reactor Position'
 		self.position = Label(f2, text='Position:\n%s'% str((CFG["reactor types"][self.reactor_type.get()]['x pos'],CFG["reactor types"][self.reactor_type.get()]['y pos'])),
-				 width=12, borderwidth=2, relief='ridge')
+				 width=20, borderwidth=2, relief='ridge')
 		self.position.grid(row=0, rowspan=2, column=0, padx=1, pady=5)
 		# 'BLE ID'
 		self.ble_id = Label(f2, text='BLE ID:\n%s'% CFG["reactor types"][self.reactor_type.get()]['ble addr'],
-				 width=12, borderwidth=2, relief='ridge')
+				 width=20, borderwidth=2, relief='ridge')
 		self.ble_id.grid(row=2, column=0, padx=1, pady=5)
 		# 'Read ID'
 		Button(f2, text='Read ID',
-				 width=12, command=self.on_read_ble_id).grid(
+				 width=20, command=self.on_read_ble_id).grid(
 				row=4, rowspan=2, column=0, padx=1, pady=5, sticky=S)
 
 
@@ -159,7 +159,7 @@ class ReactorDisplay:
 		###   COLUMNS 3,4,5,6   ###
 		for i in range(1, 5):
 			f = Frame(master)
-			f.grid(row=idx-1, column=2+i, padx=1, pady=1, sticky=N)
+			f.grid(row=idx-1+1, column=2+i-3, padx=1, pady=1, sticky=N)
 			# 'Port 1'
 			pf = Frame(f, borderwidth=2, relief='ridge')
 			pf.grid(row=0, column=0, columnspan=2, padx=1, pady=5)
@@ -208,22 +208,27 @@ class ReactorDisplay:
 
 
 		###   COLUMN 7   ###
-		f7 = Frame(master)
-		f7.grid(row=idx-1, column=7, padx=1, pady=1, sticky=N)
+		f78 = Frame(master)
+		f78.grid(row=idx-1, column=7-4, padx=1, pady=1, sticky=N)
+
+		f7 = Frame(f78)
+		f7.grid(row=0, column=0)
+		# f7.grid(row=idx-1, column=7-4, padx=1, pady=1, sticky=N)
 		# 'Outlet Valve'
 		ValveButton(c, cnsl, CFG['slots'][str(idx)]['outlet'], f7, text='Outlet\nValve',
-				 width=8, command=self.on_outlet_valve_pressed).grid(
-				row=0, column=1, padx=1, pady=5)
+				 width=8, height=3, command=self.on_outlet_valve_pressed).grid(
+				row=0, column=1, padx=1)
 		# 'Sep Valve'
 		ValveButton(c, cnsl, CFG['slots'][str(idx)]['sep'], f7, text='Sep\nValve',
-				 width=8, command=self.on_sep_valve_pressed).grid(
-				row=1, column=1, padx=1, pady=5)
+				 width=8, height=3, command=self.on_sep_valve_pressed).grid(
+				row=1, column=1, padx=1)
 
 
 
 		###   COLUMN 8   ###
-		f8 = Frame(master)
-		f8.grid(row=idx-1, column=8, padx=1, pady=1, sticky=N)
+		f8 = Frame(f78)
+		# f8.grid(row=idx-1, column=8-4, padx=1, pady=1, sticky=N)
+		f8.grid(row=0, column=1)
 		# 'BLE Data'
 		Label(f8, text='BLE DATA',
 					 width=24, borderwidth=2, relief='ridge').grid(
