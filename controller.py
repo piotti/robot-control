@@ -58,17 +58,19 @@ class Controller:
 		self.pump_cbs.append(cb)
 
 	## ROBOT FUNCTIONS ##
-	def moveReactor(self, storeNum, bayNum, direction, reactorType = 'normal', between_stores = False, between_bays = False, verbose = None):
+	def moveReactor(self, storeNum, bayNum, direction, reactorType = 'normal', between_stores = False,
+		between_bays = False, verbose = None, callback=lambda x: None):
 		print 'moving reactor'
 		print storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose
 
 		# Start thread
-		t = threading.Thread(target=robot_use.moveReactor, args = (storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose))
+		t = threading.Thread(target=robot_use.moveReactor, args = (storeNum, bayNum, direction, reactorType, between_stores,
+			between_bays, verbose, callback))
 		t.start()
 
-	def movePipe(nearNum, farNum, direction, xDisp = .05, yDisp = .03):
+	def movePipe(nearNum, farNum, direction, xDisp = .05, yDisp = .03, callback=lambda x: None):
 		print 'moving pipe'
 		print nearNum, farNum, direction, xDisp, yDisp
 
-		t = threading.Thread(target=robot_use.movePipe, args = (nearNum, farNum, direction, xDisp, yDisp))
+		t = threading.Thread(target=robot_use.movePipe, args = (nearNum, farNum, direction, xDisp, yDisp, callback))
 		t.start()

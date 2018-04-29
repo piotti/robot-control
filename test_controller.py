@@ -41,6 +41,10 @@ class PumpController:
 class ValveController:
     def __init__(self):
         pass
+    def openValve(self, _):
+        pass
+    def closeValve(self, _):
+        pass
 
     def readValves(self):
         return [0]*16
@@ -74,6 +78,9 @@ class BleConnection:
         for uuid in CHARACTERISTICS:
             chars[uuid] = BleCharacteristic(uuid, CHARACTERISTICS[uuid]['name'], CHARACTERISTICS[uuid]['type'])
         return chars
+
+    def write(self, *args, **kwargs):
+        pass
 
 class BleCharacteristic:
     def __init__(self, uuid, name, typ):
@@ -122,10 +129,18 @@ class Controller:
         self.pump_cbs.append(cb)
 
     ## ROBOT FUNCTIONS ##
-    def moveReactor(self, storeNum, bayNum, direction, reactorType = 'normal', between_stores = False, between_bays = False, verbose = None):
+    def moveReactor(self, storeNum, bayNum, direction, reactorType = 'normal', between_stores = False,
+        between_bays = False, verbose = None, callback=lambda x: None):
         print 'moving reactor'
+        threading.Thread(target=reactor_finish, args=(callback,)).start()
         print storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose
 
-    def movePipe(nearNum, farNum, direction, xDisp = .05, yDisp = .03):
+    def movePipe(nearNum, farNum, direction, xDisp = .05, yDisp = .03, callback=lambda x: None):
         print 'moving pipe'
         print nearNum, farNum, direction, xDisp, yDisp
+        threading.Thread(target=reactor_finish, args=(callback,)).start()
+
+
+def reactor_finish(cb):
+    time.sleep(3)
+    cb(0)

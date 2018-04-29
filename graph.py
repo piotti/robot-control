@@ -6,6 +6,8 @@ import matplotlib.animation as animation
 from matplotlib import style
 
 import Tkinter as tk
+from Tkinter import *
+from ttk import *
 
 import time
 
@@ -116,8 +118,8 @@ class DataSet:
         global START_TIME
         if START_TIME is None:
             START_TIME = t
-            print 'setting start'
-        print time.time()-START_TIME
+            # print 'setting start'
+        # print time.time()-START_TIME
         self.ts.append(t-START_TIME)
         self.ys.append(y)
         self.ymax = max(y, self.ymax)
@@ -162,18 +164,41 @@ class Graph():
         toolbar.update()
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-
         self.live_scroll = tk.IntVar()
         self.live_scroll.set(1)
-        tk.Checkbutton(master, text='Live Scroll', variable=self.live_scroll).pack()
+        Checkbutton(master, text='Live Scroll', variable=self.live_scroll).pack()
 
         self.a_xlim = (0,120)
         self.a_ylim = (0,300)
         self.b_xlim = (0,120)
         self.b_ylim = (0,200)
 
+        self.reactors = [int(e) for e in sorted(CFG['slots'].keys())]
+        self.p_vars = {}
+        self.t_vars = {}
+        self.p_checks = {}
+        self.t_checks = {}
 
+        frame = Frame(master)
+        
+        frame.pack()
+        Label(frame, text='Pressure').grid(row=0, column=0, columnspan=len(self.reactors))
+        Label(frame, text='Temperature').grid(row=3, column=0, columnspan=len(self.reactors))
+        for i in range(len(self.reactors)//2+len(self.reactors)%2):
+            frame.grid_columnconfigure(i, minsize=150)
 
+        for i, r in enumerate(self.reactors):
+            self.p_vars[r] = tk.IntVar()
+            self.p_checks[r] = Checkbutton(frame, text=r, variable=self.p_vars[r])
+            self.p_checks[r].grid(row=1+i/4, column=i%4, sticky=W)
+
+            self.t_vars[r] = tk.IntVar()
+            self.t_checks[r] = Checkbutton(frame, text=r, variable=self.t_vars[r])
+            self.t_checks[r].grid(row=4+i/4, column=i%4, sticky=W)
+
+    def set_reactor_name(self, idx, name):
+        self.p_checks[idx]['text'] = name
+        self.t_checks[idx]['text'] = name
 
 
     # Declare and register callbacks
@@ -214,7 +239,7 @@ class Graph():
     def animate(self, i):
         # addNewPoint()
 
-        print 'datasets', TEMP_SETS
+        # print 'datasets', TEMP_SETS
 
         ### Configure Temp Subplot ###
         series = []

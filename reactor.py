@@ -1,5 +1,7 @@
 from Tkinter import *
 from ttk import *
+import ttk
+import Tkinter
 import Tkinter
 import tkMessageBox as messagebox
 
@@ -13,31 +15,32 @@ import time
 
 from graph import add_temp_set, add_pressure_set, TEMP_SETS, PRESSURE_SETS
 
-
 class ValveButton:
 	def __init__(self, c, cnsl, addr, *args, **kwargs):
 		self.cnsl = cnsl
 
 		if 'command' in kwargs:
 			cb = self.make_cb(kwargs['command'])
-			kwargs['command'] = cb
 		else:
-			cb = self.make_cb(lambda x:None)
-			kwargs['command'] = cb
+			cb = self.make_cb(lambda:None)
+
+		self.cb = cb
+
 
 		
 
 		self.c = c
 		self.addr = int(addr)
 
-		if self.addr == 0:
+		if self.addr == -1:
 			kwargs['state'] = DISABLED
 
 		self.btn = Tkinter.Button(*args, **kwargs)
+		self.btn.bind('<ButtonPress>', lambda _ : cb())
 
-		if self.addr != 0:
+
+		if self.addr != -1:
 			self.read()
-			print self.open	
 
 		
 
@@ -52,38 +55,88 @@ class ValveButton:
 		# self.btn.configure(font=helv)
 	def grid(self, *args, **kwargs):
 		self.btn.grid(*args, **kwargs)
+		return self
 		
 	def pack(self, *args, **kwargs):
 		self.btn.pack(*args, **kwargs)
+		return self
+
+	def event_generate(self, *args, **kwargs):
+		self.btn.event_generate(*args, **kwargs)
+
+	def open_valve(self):
+		self.read()
+		if not self.open:
+			return self.cb()
+		return 0
+
+	def close_valve(self):
+		self.read()
+		if self.open:
+			return self.cb()
+		return 0
 
 	# This routed the previous callback through this function
 	def make_cb(self, prev_cb):
 		def cb():
-			self.cnsl('changing state of valve %d' % (self.addr-1))
+			if self.addr == -1:
+				# Valve not connected to port
+				self.cnsl('Error: Valve not connected to Festo port')
+				return 1
+			self.cnsl('changing state of valve %d' % self.addr)
 			# Check state
 			if self.open:
 				# Close
-				self.c.valves.closeValve(self.addr-1)
+				self.c.valves.closeValve(self.addr)
 				time.sleep(.05)
 				self.read()
 			else:
 				# Open
-				self.c.valves.openValve(self.addr-1)
+				self.c.valves.openValve(self.addr)
 				time.sleep(.05)
 				self.read()
 
-			prev_cb()
+			return prev_cb()
 		return cb
+
+class Button:
+	def __init__(self, *args, **kwargs):
+		cb = kwargs['command']
+		del kwargs['command']
+		if kwargs.get('tk', False):
+			del kwargs['tk']
+			self.btn = Tkinter.Button(*args, **kwargs)
+		else:
+			if 'tk' in kwargs:
+				del kwargs['tk']
+			self.btn = ttk.Button(*args, **kwargs)
+		
+
+		self.btn.bind('<ButtonPress>', lambda _ : cb())
+
+	def grid(self, *args, **kwargs):
+		self.btn.grid(*args, **kwargs)
+		return self
+		
+	def pack(self, *args, **kwargs):
+		self.btn.pack(*args, **kwargs)
+		return self
+	def event_generate(self, *args, **kwargs):
+		self.btn.event_generate(*args, **kwargs)
+
+	def __setitem__(self, *args):
+		self.btn.__setitem__(*args)
 
 
 
 class ReactorDisplay:
 
-	def __init__(self, master, idx, c, cnsl, stack_idx):
+	def __init__(self, master, idx, c, cnsl, stack_idx, graph):
 		self.master = master
 		self.idx = idx
 		self.c = c
 		self.stack_idx = stack_idx
+		self.graph = graph
 
 		self.cnsl = cnsl
 
@@ -98,9 +151,9 @@ class ReactorDisplay:
 
 		###   COLUMN 0   ###
 		f0 = Frame(master)
-		f0.grid(row=idx-1, column=0, padx=5, pady=1, sticky=N)
+		f0.grid(row=idx, column=0, padx=5, pady=1, sticky=N)
 		# "Reactor: Jaw 1"
-		ValveButton(c, cnsl, CFG['slots'][str(idx)]['jaw'], f0,
+		self.jaw_btn = ValveButton(c, cnsl, CFG['slots'][str(idx)]['jaw'], f0,
 				text='Reactor Jaw %d' % idx,
 				command=self.on_jaw_close,  width=15, height=6).pack(fill=BOTH)
 
@@ -108,21 +161,23 @@ class ReactorDisplay:
 
 		###   COLUMN 1   ###
 		f1 = Frame(master)
-		f1.grid(row=idx-1, column=1, padx=1, pady=1, sticky=N)
+		f1.grid(row=idx, column=1, padx=1, pady=1, sticky=N)
 		# "Reactor Type"
 		rf = Frame(f1, borderwidth=2, relief='ridge')
 		rf.grid(row=0, rowspan=2, column=0, padx=1, pady=5)
 		Label(rf, text='Reactor Type:',  width=24).grid(
 			row=0, column=0, padx=1, pady=0, )
 		self.reactor_type = StringVar(rf)
-		self.reactor_type.set(sorted(CFG["reactor types"].keys())[0])
-		OptionMenu(rf, self.reactor_type, *sorted(CFG["reactor types"].keys()), command=self.on_reactor_type_change).grid(
+		# self.reactor_type.set(sorted(CFG["reactor types"].keys())[0])
+		self.reactor_type.set('')
+		options = [' '] + sorted(CFG["reactor types"].keys())
+		OptionMenu(rf, self.reactor_type, *options, command=self.on_reactor_type_change).grid(
 				row=2, column=0, padx=1, pady=0, ipadx=20)
 		# 'Move to Storage', 'Move to Stack'
 		mf = Frame(f1, borderwidth=2, relief='ridge')
 		mf.grid(row=2, column=0)
-		Button(mf, text='To Storage', command=self.on_move_to_storage).grid(row=0, column=0)
-		Button(mf, text='To Stack', command=self.on_move_to_stack).grid(row=0, column=1)
+		self.storage_btn = Button(mf, text='To Storage', command=self.on_move_to_storage).grid(row=0, column=0)
+		self.stack_btn = Button(mf, text='To Stack', command=self.on_move_to_stack).grid(row=0, column=1)
 		# 'SP Temp'
 		spf = Frame(f1, borderwidth=2, relief='ridge')
 		spf.grid(row=3, column=0)
@@ -136,17 +191,21 @@ class ReactorDisplay:
 
 		###   COLUMN 2   ###
 		f2 = Frame(master)
-		f2.grid(row=idx-1, column=2, padx=1, pady=1, sticky=N)
+		f2.grid(row=idx, column=2, padx=1, pady=1, sticky=N)
 		# 'Reactor Position'
-		self.position = Label(f2, text='Position:\n%s'% str((CFG["reactor types"][self.reactor_type.get()]['x pos'],CFG["reactor types"][self.reactor_type.get()]['y pos'])),
+		# self.position = Label(f2, text='Storage Position:\n%s'% str((CFG["reactor types"][self.reactor_type.get()]['storage x'],CFG["reactor types"][self.reactor_type.get()]['storage y'])),
+				 # width=20, borderwidth=2, relief='ridge')
+		self.position = Label(f2, text='Storage Position:\n',
 				 width=20, borderwidth=2, relief='ridge')
 		self.position.grid(row=0, rowspan=2, column=0, padx=1, pady=5)
 		# 'BLE ID'
-		self.ble_id = Label(f2, text='BLE ID:\n%s'% CFG["reactor types"][self.reactor_type.get()]['ble addr'],
+		# self.ble_id = Label(f2, text='BLE ID:\n%s'% CFG["reactor types"][self.reactor_type.get()]['ble addr'],
+		# 		 width=20, borderwidth=2, relief='ridge')
+		self.ble_id = Label(f2, text='BLE ID:\n',
 				 width=20, borderwidth=2, relief='ridge')
 		self.ble_id.grid(row=2, column=0, padx=1, pady=5)
 		# 'Read ID'
-		Button(f2, text='Read ID',
+		self.read_id_btn = Button(f2, text='Read ID',
 				 width=20, command=self.on_read_ble_id).grid(
 				row=4, rowspan=2, column=0, padx=1, pady=5, sticky=S)
 
@@ -156,18 +215,21 @@ class ReactorDisplay:
 		self.pump_types = {}
 		self.pump_ids = {}
 
+		self.port_btns = {}
 		###   COLUMNS 3,4,5,6   ###
 		for i in range(1, 5):
+			self.port_btns[i] = {}
+
 			f = Frame(master)
-			f.grid(row=idx-1+1, column=2+i-3, padx=1, pady=1, sticky=N)
+			f.grid(row=idx+1, column=2+i-3, padx=1, pady=1, sticky=N)
 			# 'Port 1'
 			pf = Frame(f, borderwidth=2, relief='ridge')
 			pf.grid(row=0, column=0, columnspan=2, padx=1, pady=5)
 			Label(pf, text='Port %d' % i,  width=6).grid(
 				row=0, column=0, padx=1)
-			Button(pf, text='Connect', command=self.make_port_connect_callback(i)).grid(
+			self.port_btns[i]['connect'] = Button(pf, text='Connect', command=self.make_port_connect_callback(i)).grid(
 				row=0, column=1, padx=1)
-			Button(pf, text='Disconnect', command=self.make_port_disconnect_callback(i)).grid(
+			self.port_btns[i]['disconnect'] = Button(pf, text='Disconnect', command=self.make_port_disconnect_callback(i)).grid(
 				row=0, column=2, padx=1)
 			# 'Tube #'
 			tf = Frame(f, borderwidth=2, relief='ridge')
@@ -179,7 +241,7 @@ class ReactorDisplay:
 			OptionMenu(tf, self.tube_numbers[i], " ", *sorted(CFG['tubes'].keys()), command=self.make_tube_number_change_callback(i)).grid(
 					row=2, column=0, padx=1, pady=0, ipadx=20)
 			# 'Valve 1'
-			ValveButton(c, cnsl, CFG['slots'][str(idx)]['valve %d' % i], f, text='Valve %d' % i,
+			self.port_btns[i]['valve'] = ValveButton(c, cnsl, CFG['slots'][str(idx)]['valve %d' % i], f, text='Valve %d' % i,
 					 width=12, command=self.make_reactor_valve_callback(i)).grid(
 					row=3, rowspan=1, column=0, padx=1, pady=5)
 			# 'F Rate'
@@ -199,27 +261,27 @@ class ReactorDisplay:
 					 width=12, borderwidth=2, relief='ridge')
 			self.pump_ids[i].grid(row=3, column=1, padx=1, pady=5)
 			# 'Start Pump'
-			Button(f, text='Set Flow', command=self.make_start_pump_callback(i)).grid(
+			self.port_btns[i]['start_pump'] = Button(f, text='Set Flow', command=self.make_start_pump_callback(i)).grid(
 				row=4, column=0, padx=1, pady=0)
 			# 'Stop Pump'
-			Button(f, text='Stop Pump', command=self.make_stop_pump_callback(i)).grid(
+			self.port_btns[i]['stop_pump'] = Button(f, text='Stop Pump', command=self.make_stop_pump_callback(i)).grid(
 				row=4, column=1, padx=1, pady=0)
 
 
 
 		###   COLUMN 7   ###
 		f78 = Frame(master)
-		f78.grid(row=idx-1, column=7-4, padx=1, pady=1, sticky=N)
+		f78.grid(row=idx, column=7-4, padx=1, pady=1, sticky=N)
 
 		f7 = Frame(f78)
 		f7.grid(row=0, column=0)
-		# f7.grid(row=idx-1, column=7-4, padx=1, pady=1, sticky=N)
+		# f7.grid(row=idx, column=7-4, padx=1, pady=1, sticky=N)
 		# 'Outlet Valve'
-		ValveButton(c, cnsl, CFG['slots'][str(idx)]['outlet'], f7, text='Outlet\nValve',
+		self.outlet_btn = ValveButton(c, cnsl, CFG['slots'][str(idx)]['outlet'], f7, text='Outlet\nValve',
 				 width=8, height=3, command=self.on_outlet_valve_pressed).grid(
 				row=0, column=1, padx=1)
 		# 'Sep Valve'
-		ValveButton(c, cnsl, CFG['slots'][str(idx)]['sep'], f7, text='Sep\nValve',
+		self.sep_btn = ValveButton(c, cnsl, CFG['slots'][str(idx)]['sep'], f7, text='Sep\nValve',
 				 width=8, height=3, command=self.on_sep_valve_pressed).grid(
 				row=1, column=1, padx=1)
 
@@ -227,7 +289,7 @@ class ReactorDisplay:
 
 		###   COLUMN 8   ###
 		f8 = Frame(f78)
-		# f8.grid(row=idx-1, column=8-4, padx=1, pady=1, sticky=N)
+		# f8.grid(row=idx, column=8-4, padx=1, pady=1, sticky=N)
 		f8.grid(row=0, column=1)
 		# 'BLE Data'
 		Label(f8, text='BLE DATA',
@@ -235,10 +297,10 @@ class ReactorDisplay:
 					row=0, column=0, columnspan=2, padx=1, pady=5, sticky=N)
 		# 'Connect'
 		self.connect_btn = Button(f8, text='Connect',
-				 width=10, command=self.on_connect_pressed)
-		self.connect_btn.grid(row=1, column=0, padx=1, pady=0, sticky=W+N)
+				 width=10, command=self.on_connect_pressed, tk=True).grid(
+				 row=1, column=0, padx=1, pady=0, sticky=W+N)
 		# 'Update'
-		Button(f8, text='Update',
+		self.update_btn = Button(f8, text='Update',
 				 width=10, command=self.on_update_pressed).grid(
 				row=2, column=0, padx=1, pady=0, sticky=W+N)
 		# 'Mixing'
@@ -259,23 +321,35 @@ class ReactorDisplay:
 		self.temp.grid(row=2, column=1, padx=1, pady=5)
 
 
+
+
+		# self.reactor_type.trace('w', lambda *args: self.on_reactor_type_change())
+		
+
+
 	###   CALLBACKS ###
 	def on_jaw_close(self):
 		pass
 		# self.cnsl( 'jaw close')
 	def on_reactor_type_change(self, val):
-		self.cnsl( val)
-		self.cnsl( 'on_reactor_type_change')
+		self.reactor_type.set(val)
+		self.cnsl( 'on_reactor_type_change: %s' % val)
 		ble_addr = CFG['reactor types'][val]['ble addr']
-		position = CFG['reactor types'][val]['x pos'], CFG['reactor types'][val]['y pos']
+		position = CFG['reactor types'][val]['storage x'], CFG['reactor types'][val]['storage y']
+		print position
 		self.ble_id['text'] = 'BLE ID:\n%s'% ble_addr
-		self.position['text'] = 'Position:\n%s'% str(position)
+		self.position['text'] = 'Storage Position:\n%s'% str(position)
+
+		# Update graphing display name
+		self.graph.set_reactor_name(self.idx, self.reactor_type.get())
 
 	def on_read_ble_id(self):
 		self.cnsl( 'on_read_ble_id')
 	def make_tube_number_change_callback(self, idx):
 		def on_tube_number_change(val):
+			self.tube_numbers[idx].set(val)
 			self.cnsl( 'Port %s tube changed to %s' % (str(idx), str(val)))
+
 			if val == ' ':
 				# pump deslelected
 				self.pump_types[idx]['text'] = 'P Type: '
@@ -286,9 +360,8 @@ class ReactorDisplay:
 		return on_tube_number_change
 	def make_reactor_valve_callback(self, idx):
 		def on_reactor_valve_pressed():
-			pass
-			# self.cnsl( 'on_reactor_valve_pressed')
-			# self.cnsl( idx)
+			self.cnsl('on_reactor_valve_pressed')
+			self.cnsl(idx)
 		return on_reactor_valve_pressed
 	def make_start_pump_callback(self, idx):
 		def on_start_pump_pressed():
@@ -298,10 +371,11 @@ class ReactorDisplay:
 				fr = int(fr)
 			except ValueError:
 				self.cnsl( 'couldnt parse FR')
-				return
+				return 1
 			addr = self.pump_ids[idx]['text'][6:]
 			self.cnsl( 'setting pump %s to flow rate %d' % (addr, fr))
 			self.c.pumps.setFlow(addr, fr, CFG['tubes'][self.tube_numbers[idx].get()]['volume'])
+			return 0
 		return on_start_pump_pressed
 	def make_stop_pump_callback(self, idx):
 		def on_stop_pump_pressed():
@@ -314,15 +388,19 @@ class ReactorDisplay:
 		self.cnsl( 'on_outlet_valve_pressed')
 	def on_sep_valve_pressed(self):
 		self.cnsl( 'on_sep_valve_pressed')
-	def on_connect_pressed(self):
+	def on_connect_pressed(self, callback = lambda x : None):
 		if not self.connected:
+			if self.reactor_type.get() == ' ':
+				self.cnsl('Error: no reactor chosen.')
+				return callback(2)
+
 			addr = self.ble_id['text'][8:]
 			self.cnsl( 'Connecting to PSOC ' + addr)
 
 			# Show coutdown on connect button
 			self.decrement_timer()
 			# Start thread
-			t = threading.Thread(target = self.connect_to_reactor, args = (addr,))
+			t = threading.Thread(target = self.connect_to_reactor, args = (addr,callback))
 			t.start()
 		else:
 			addr = self.ble_id['text'][8:]
@@ -335,14 +413,24 @@ class ReactorDisplay:
 	def on_update_pressed(self):
 		if not self.connected:
 			self.cnsl('Error: you are not connect to reactor')
-			return
+			return 1
 		val = self.sp_temp.get()
 		try:
+			# Write setpoint
 			self.connection.write(self.chars['ab29'].handle, val, 'int')
+
+			# Write temp control on/off
+			if int(val) == 0:
+				self.connection.write(self.chars['6a65'].handle, 0, 'int')
+			else:
+				self.connection.write(self.chars['6a65'].handle, 1, 'int')
+
+
 		except Exception:
 			self.cnsl( 'Error when trying to set setpoint. Enter integer between 0 and 255')
-			return
+			return 1
 		self.cnsl( 'Setting setpoint to %s deg C' % val)
+		return 0
 		
 
 
@@ -386,34 +474,48 @@ class ReactorDisplay:
 		if not self.connected:
 			self.mixing.set(0)
 			self.cnsl('Error: you are not connect to reactor')
-			return
-		val = str(self.mixing.get())
-		self.cnsl('Setting mixing at '+val+' %')
+			return 1
+		val = int(self.mixing.get())
+		self.cnsl('Setting mixing at '+str(val)+' %')
 		self.connection.write(self.chars['1196'].handle, val, 'int')
+		return 0
 
-	def on_move_to_storage(self):
+	def on_move_to_storage(self, callback=lambda x: None):
 		reactor = self.reactor_type.get()
 		# position = CFG['reactor types'][reactor]['position']
-		position = (CFG['reactor types'][reactor]['x pos'], CFG['reactor types'][reactor]['y pos'])
+		if reactor == ' ':
+			self.cnsl('Error: no reactor chosen.')
+			return callback(2)
+
+		position = (CFG['reactor types'][reactor]['storage x'], CFG['reactor types'][reactor]['storage y'])
 		# bay = self.idx - 1
-		bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
+		bay = (self.stack_idx, self.idx)
+		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
 		self.cnsl('Moving reactor %s from bay slot %s to storage slot %s' % (reactor, str(bay), str(position)))
-		self.c.moveReactor(position, bay, -1)
+		self.c.moveReactor(position, bay, -1, callback=callback)
 
-	def on_move_to_stack(self):
+	def on_move_to_stack(self, callback=lambda x: None):
 		reactor = self.reactor_type.get()
+
+		if reactor == ' ':
+			self.cnsl('Error: no reactor chosen.')
+			return callback(2)
+
 		# position = CFG['reactor types'][reactor]['position']
-		position = (CFG['reactor types'][reactor]['x pos'], CFG['reactor types'][reactor]['y pos'])
+		position = (CFG['reactor types'][reactor]['storage x'], CFG['reactor types'][reactor]['storage y'])
 		# bay = self.idx - 1
-		bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
+		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
+		bay = (self.stack_idx, self.idx)
 		self.cnsl('Moving reactor %s from storage slot %s to bay slot %s' % (reactor, str(position), str(bay)))
-		self.c.moveReactor(position, bay, 1)
+		self.c.moveReactor(position, bay, 1, callback=callback)
 
 	def make_port_connect_callback(self, idx):
-		def cb():
+		def cb(callback=lambda x: None):
 			tube = self.tube_numbers[idx].get()
 			if tube == ' ':
 				self.cnsl('Error: No tube selected')
+				# Report error to queueing callback
+				callback(2)
 				return
 			port = idx
 			tower_num = CFG['slots'][str(self.idx)]["port %d" % port]
@@ -422,14 +524,16 @@ class ReactorDisplay:
 				return
 			bay = self.idx - 1
 			self.cnsl('Connecting tube %s to port %d of bay slot %d' % (tube, port, bay))
-			self.c.movePipe(tower_num, int(tube), -1)
+			self.c.movePipe(tower_num, int(tube), -1, callback=callback)
 		return cb
 
 	def make_port_disconnect_callback(self, idx):
-		def cb():
+		def cb(callback=lambda x: None):
 			tube = self.tube_numbers[idx].get()
 			if tube == ' ':
 				self.cnsl('Error: No tube selected')
+				# Report error to queueing callback
+				callback(2)
 				return
 			port = idx
 			tower_num = CFG['slots'][str(self.idx)]["port %d" % port]
@@ -438,12 +542,12 @@ class ReactorDisplay:
 				return
 			bay = self.idx - 1
 			self.cnsl('Disconnecting tube %s from port %d of bay slot %d' % (tube, port, bay))
-			self.c.movePipe(tower_num, int(tube), 1)
+			self.c.movePipe(tower_num, int(tube), 1, callback=callback)
 		return cb
 
 
 	# THREADS
-	def connect_to_reactor(self, addr):
+	def connect_to_reactor(self, addr, callback):
 		# Blocking function call:
 		self.connection = self.c.ble.connect_to_reactor(addr)
 
@@ -451,7 +555,10 @@ class ReactorDisplay:
 			# Couldn't connect
 			self.cnsl('Couldn\'t connect to ' + addr)
 			self.connect_btn['text'] = 'Connect'
+			callback(1)
 			return
+
+		
 
 		self.cnsl( 'Connection to ' + addr + ' established')
 
@@ -469,6 +576,7 @@ class ReactorDisplay:
 		self.connect_btn['text'] = 'Disconnect'
 		self.connect_btn['bg'] = 'green'
 		self.connected = True
+		callback(0)
 
 
 
