@@ -56,10 +56,17 @@ class RobotQueue:
 
         while True:
             line = self.file.readline()
+            self.read_idx += 1
             if line == '':
                 # Whole file has been read
                 break
-            self.read_idx += 1
+            if line[0] == '#':
+                # Its a comment, ignore
+                continue
+            if not line.strip():
+                # Empty line
+                continue
+            
 
             parts = line.split(',')
             step, action, arg1 = parts[:3]

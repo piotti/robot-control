@@ -1,5 +1,66 @@
 # Queueing File Format
 
+## General Format
+
+Queueing files should be in CSV (comma separated values) format. There are five columns: `Step`, `Action`, `Arg1`, `Arg2`, and `Arg3`. Every file should start out with one header line that lists these five columns.
+
+* `Step`
+   * An integer which denotes the line number. Step should start at 1 and increase by 1 every line.
+* `Action`
+   * Denotes the command. All actions are a single string with capital lettters and no spaces.
+* `Arg1`, `Arg2`, and `Arg3`
+   * The arguments of the command. Commands may take 1, 2, or 3 arguments. If the command takes fewer than 3 arguments, the remaining argument fields may be left blank.
+
+## Comments
+
+Files can contain comments that won't get processed. Any line starting with `#` will not be executed.
+
+## Example file
+
+Here is an example queueing file, which brings Reactor 1 from storage to bay (0, 0), connects via BLE, sets the setpoint to 100 deg. C, waits 2 minutes, then disconnects and moves the reactor back to storage.
+
+```
+Step,Action,Arg1,Arg2,Arg3
+
+# Link Reactor 1 to bay (0; 0)
+1,REACTORSETUP,1,0 0
+
+# Move reactor to bay (0; 0). This line will block until the robot has completed the move.
+2,REACTORMOVE,1,TOBAY
+
+# Close the jaw to power up the reactor
+3,REACTORJAWCLOSE,1
+
+# Wait 3 seconds for jaw to close and for PSoC to power up
+4,TIMEOUT,3000
+
+# Initiate Bluetooth connection
+5,BLECONNECT,1
+
+# Start heating to 100 degrees C
+6,SETPOINT,1,100
+
+# Wait 2 minutes (120000 ms)
+7,TIMEOUT,120000
+
+# Turn off heater
+8,SETPOINT,1,0
+
+# Bluetooth disconnect
+9,BLEDISCONNECT,1
+
+# Open jaw
+10,REACTORJAWOPEN,1
+
+# Wait for jaw to open
+11,TIMEOUT,2
+
+# Move back to storage
+12,REACTORMOVE,1,TOSTORAGE
+```
+
+
+
 ## Actions
 
 ### Setup
