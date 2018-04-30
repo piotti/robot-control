@@ -53,7 +53,7 @@ Step,Action,Arg1,Arg2,Arg3
 10,REACTORJAWOPEN,1
 
 # Wait for jaw to open
-11,TIMEOUT,2
+11,TIMEOUT,2000
 
 # Move back to storage
 12,REACTORMOVE,1,TOSTORAGE
