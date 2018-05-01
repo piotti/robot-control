@@ -48,7 +48,7 @@ class Controller:
 			pcb(msg)
 
 	def pumps_connect(self):
-		self.pumps = PumpController(self.pump_callback, ip=CFG["pumps_ip"], port=CFG["pumps_port"])
+		self.pumps = PumpController(self.pump_callback, ip=CFG["pumps_ip"], port=int(CFG["pumps_port"]))
 
 	def pumps_disconnect(self):
 		if self.pumps is not None:

@@ -1,2 +1,2 @@
-import json
-CFG = json.loads(open('config.json').read())
+from configobj import ConfigObj
+CFG = ConfigObj('config.ini')

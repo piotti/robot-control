@@ -590,7 +590,7 @@ class RobotQueue:
 
     def get_reactor_type_from_id(self, id_):
         for rt in CFG['reactor types']:
-            if  CFG['reactor types'][rt]['id'] == id_:
+            if  int(CFG['reactor types'][rt]['id']) == id_:
                 return rt
         # Error
         self.cnsl_print('Error - step %d: Reactor with ID %d not found.' % (self.step, id_))

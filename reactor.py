@@ -374,7 +374,7 @@ class ReactorDisplay:
 				return 1
 			addr = self.pump_ids[idx]['text'][6:]
 			self.cnsl( 'setting pump %s to flow rate %d' % (addr, fr))
-			self.c.pumps.setFlow(addr, fr, CFG['tubes'][self.tube_numbers[idx].get()]['volume'])
+			self.c.pumps.setFlow(addr, fr, int(CFG['tubes'][self.tube_numbers[idx].get()]['volume']))
 			return 0
 		return on_start_pump_pressed
 	def make_stop_pump_callback(self, idx):
@@ -487,7 +487,7 @@ class ReactorDisplay:
 			self.cnsl('Error: no reactor chosen.')
 			return callback(2)
 
-		position = (CFG['reactor types'][reactor]['storage x'], CFG['reactor types'][reactor]['storage y'])
+		position = (int(CFG['reactor types'][reactor]['storage x']), int(CFG['reactor types'][reactor]['storage y']))
 		# bay = self.idx - 1
 		bay = (self.stack_idx, self.idx)
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
@@ -502,7 +502,7 @@ class ReactorDisplay:
 			return callback(2)
 
 		# position = CFG['reactor types'][reactor]['position']
-		position = (CFG['reactor types'][reactor]['storage x'], CFG['reactor types'][reactor]['storage y'])
+		position = (int(CFG['reactor types'][reactor]['storage x']), int(CFG['reactor types'][reactor]['storage y']))
 		# bay = self.idx - 1
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
 		bay = (self.stack_idx, self.idx)
