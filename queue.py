@@ -287,7 +287,7 @@ class RobotQueue:
             x, y = arg1.split(' ')
             x = int(x)
             y = int(y)
-            err = self.get_reactor_display(x, y).jaw_btn.close_valve()
+            err = self.get_reactor_display(x, y).jaw_btn.open_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -301,7 +301,7 @@ class RobotQueue:
             x, y = arg1.split(' ')
             x = int(x)
             y = int(y)
-            err = self.get_reactor_display(x, y).jaw_btn.open_valve()
+            err = self.get_reactor_display(x, y).jaw_btn.close_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -313,7 +313,7 @@ class RobotQueue:
                 1. Reactor ID
             '''
             rID = int(arg1)
-            err = self.get_reactor_display(ID=rID).jaw_btn.close_valve()
+            err = self.get_reactor_display(ID=rID).jaw_btn.open_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -325,7 +325,7 @@ class RobotQueue:
                 1. Reactor ID
             '''
             rID = int(arg1)
-            err = self.get_reactor_display(ID=rID).jaw_btn.open_valve()
+            err = self.get_reactor_display(ID=rID).jaw_btn.close_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -337,7 +337,7 @@ class RobotQueue:
                 1. Stack number (same as `x` coordinate of reactor bays)
             '''
             x = int(arg1)
-            err = self.get_stack_window(x).stack_btn.close_valve()
+            err = self.get_stack_window(x).stack_btn.open_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -349,7 +349,7 @@ class RobotQueue:
                 1. Stack number (same as `x` coordinate of reactor bays)
             '''
             x = int(arg1)
-            err = self.get_stack_window(x).stack_btn.open_valve()
+            err = self.get_stack_window(x).stack_btn.close_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -361,7 +361,7 @@ class RobotQueue:
                 1. Stack number (same as `x` coordinate of reactor bays)
             '''
             x = int(arg1)
-            err = self.get_stack_window(x).fitting_btn.close_valve()
+            err = self.get_stack_window(x).fitting_btn.open_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -373,7 +373,7 @@ class RobotQueue:
                 1. Stack number (same as `x` coordinate of reactor bays)
             '''
             x = int(arg1)
-            err = self.get_stack_window(x).fitting_btn.open_valve()
+            err = self.get_stack_window(x).fitting_btn.close_valve()
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -399,8 +399,8 @@ class RobotQueue:
             '''
             rID = int(arg1)
             if self.get_reactor_display(ID=rID).connected:
-                self.get_reactor_display(ID=rID).on_connect_pressed(callback=self.resume)
-                return 1
+                self.get_reactor_display(ID=rID).on_connect_pressed()
+                # return 1
             else:
                 self.cnsl_print('NOTE: Bluetooth already disconnected.')
 

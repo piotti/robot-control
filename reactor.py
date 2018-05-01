@@ -7,7 +7,7 @@ import tkMessageBox as messagebox
 
 from cfg import CFG
 
-from test_controller import *
+from controller import *
 
 import time
 
@@ -45,7 +45,7 @@ class ValveButton:
 		
 
 	def read(self):
-		self.open = self.c.valves.readValves()[self.addr-1]
+		self.open = self.c.valves.readValves()[self.addr]
 		# import tkFont
 		# helv = tkFont.Font(family='Helvetica', size=14)
 		# style.configure('TButton', background='green')
@@ -101,8 +101,9 @@ class ValveButton:
 
 class Button:
 	def __init__(self, *args, **kwargs):
-		cb = kwargs['command']
-		del kwargs['command']
+		cb = kwargs.get('command', lambda:None)
+		if 'command' in kwargs:
+			del kwargs['command']
 		if kwargs.get('tk', False):
 			del kwargs['tk']
 			self.btn = Tkinter.Button(*args, **kwargs)
@@ -407,7 +408,7 @@ class ReactorDisplay:
 			self.cnsl( 'Disconnecting to PSOC ' + addr)
 			self.c.ble.disconnect(self.connection.connection)
 			self.connect_btn['text'] = 'Connect'
-			self.connect_btn['bg'] = Button().cget("background")
+			self.connect_btn['bg'] = Tkinter.Button().cget("background")
 			self.connected = False
 
 	def on_update_pressed(self):
@@ -415,9 +416,12 @@ class ReactorDisplay:
 			self.cnsl('Error: you are not connect to reactor')
 			return 1
 		val = self.sp_temp.get()
+		print 'value:', val
 		try:
 			# Write setpoint
 			self.connection.write(self.chars['ab29'].handle, val, 'int')
+
+			time.sleep(0.5)
 
 			# Write temp control on/off
 			if int(val) == 0:
@@ -426,7 +430,8 @@ class ReactorDisplay:
 				self.connection.write(self.chars['6a65'].handle, 1, 'int')
 
 
-		except Exception:
+		except Exception as e:
+			print e
 			self.cnsl( 'Error when trying to set setpoint. Enter integer between 0 and 255')
 			return 1
 		self.cnsl( 'Setting setpoint to %s deg C' % val)
@@ -436,7 +441,10 @@ class ReactorDisplay:
 
 	def make_write_event_callback(self, char):
 		def cb(value):
+			print 'cb', repr(value), char.name
 			value = ble_decode(value, msbf=False)
+			print 'cb decode:', value
+			print 'type', char.type
 			if char.type == 'int':
 				value = int(value, 16)
 			elif char.type == 'text':
@@ -555,6 +563,8 @@ class ReactorDisplay:
 			# Couldn't connect
 			self.cnsl('Couldn\'t connect to ' + addr)
 			self.connect_btn['text'] = 'Connect'
+			self.connect_btn['bg'] = Tkinter.Button().cget("background")
+
 			callback(1)
 			return
 

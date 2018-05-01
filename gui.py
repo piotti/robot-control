@@ -2,7 +2,7 @@ from Tkinter import *
 import tkMessageBox as messagebox
 import tkFont
 
-from test_controller import Controller
+from controller import Controller
 
 from reactor import ReactorDisplay, ValveButton
 

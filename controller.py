@@ -8,7 +8,7 @@ from valves.modbus import ValveController
 
 import sys
 sys.path.insert(0, 'C:\Users\ROB\Dropbox\Robotic_Toolbox\Robot\UR3')
-import robot_use
+# import robot_use
 
 
 import threading
@@ -17,7 +17,7 @@ import time
 from cfg import CFG
 
 def ble_decode(value, msbf=False):
-	bled(value, msfb)
+	return bled(value, msbf)
 
 
 class Controller:
