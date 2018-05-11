@@ -22,12 +22,12 @@ import Queue
 import threading
 
 class StackWindow:
-    def __init__(self, master, idx, c, console, graph):
+    def __init__(self, master, idx, c, cnsl_print, graph):
         self.master = master
         self.idx = idx
         self.c = c
-        self.console = console
         self.graph = graph
+        self.cnsl_print = cnsl_print
         # master.title("Robot Control: Reactor Stack %d" % idx)
         # master.minsize(width=1600, height=800)
 
@@ -42,7 +42,7 @@ class StackWindow:
 
 
         # 'Close Reactor Stack'
-        self.stack_btn = ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close reactor stack festo'],
+        self.stack_btn = ValveButton(c, self.cnsl_print, CFG['stacks']['stack %d' % idx]['close reactor stack festo'],
             master, text='Close Reactor Stack %d' % idx, height=3).grid(
             row=1, column=0, sticky=N+S+E+W)
 
@@ -51,7 +51,7 @@ class StackWindow:
         for i, e in enumerate(slots):
             # f = Frame(master)
             page = ttk.Frame(nb)
-            rd = ReactorDisplay(page, int(e), c, self.printToConsole, idx, graph)
+            rd = ReactorDisplay(page, int(e), c, self.cnsl_print, idx, graph)
             self.reactors[int(e)] = rd
             nb.add(page, text='Reactor ' + e + '\n')
         nb.grid(row=0, column=0, columnspan=2)
@@ -59,12 +59,12 @@ class StackWindow:
 
 
         # 'Close Fitting Actuator'
-        self.fitting_btn = ValveButton(c, self.printToConsole, CFG['stacks']['stack %d' % idx]['close fitting actuator festo'],
+        self.fitting_btn = ValveButton(c, self.cnsl_print, CFG['stacks']['stack %d' % idx]['close fitting actuator festo'],
             master, text='Close Fitting Actuator').grid(
             row=1, column=1, sticky=N+S+E+W)
 
         # Add pumps callback to print to console
-        self.c.add_pump_callback(lambda msg: self.printToConsole('Pump message received: %s' % msg))
+        self.c.add_pump_callback(lambda msg: self.cnsl_print('Pump message received: %s' % msg))
 
         # Pressure controller display
         pframe = Frame(master)
@@ -81,7 +81,7 @@ class StackWindow:
 
 
     def on_pressure_msg(self, msg):
-        self.printToConsole('Pressure message received: %s' % msg)
+        self.cnsl_print('Pressure message received: %s' % msg)
 
 
     def on_back_pressure_set(self):
@@ -90,13 +90,8 @@ class StackWindow:
         pressure = int(self.pressure_set_entry.get())
         self.c.pressure.setPressure(addr, presure)
 
-       
-
-    def printToConsole(self, msg):
-        self.console.config(state=NORMAL)
-        self.console.insert(END, '\n' + str(msg) )
-        self.console.config(state=DISABLED)
-        self.console.see(END)
+        # TESTING: setting colors
+        # self.cnsl_print("hello \n world", color=self.pressure_set_entry.get())
 
    
 class MainWindow:
@@ -157,7 +152,7 @@ class MainWindow:
         # f_out.grid(row=0, column=0, padx=10, pady=20)
         # Label(f_out, text='STACK 1', anchor=S, font=helv).grid(row=0, column=0, columnspan=2,)
         f1 = Frame(f_out)
-        s1 = StackWindow(f1, 0, c, self.console, self.graph)
+        s1 = StackWindow(f1, 0, c, self.print_to_console, self.graph)
         self.stacks[0] = s1
         f1.grid(row=1, column=0)
         nb.add(f_out, text='Stack 1\n')
@@ -166,7 +161,7 @@ class MainWindow:
         # f_out2.grid(row=1, column=0, padx=10, pady=20)
         f2 = Frame(f_out2)
         # Label(f_out2, text='STACK 2', anchor=S, font=helv).grid(row=0, column=0)
-        s2 = StackWindow(f2, 1, c, self.console, self.graph)
+        s2 = StackWindow(f2, 1, c, self.print_to_console, self.graph)
         self.stacks[1] = s2
         f2.grid(row=1, column=0)
         nb.add(f_out2, text='Stack 2\n')
@@ -180,11 +175,28 @@ class MainWindow:
         tl3.grid(row=1, column=0, sticky=N+E+W)
 
 
-    def print_to_console(self, msg):
+
+    console_tag_idx = 0
+    def print_to_console(self, msg, color=None):
+
+
+        start = self.console.index("end-1c")
+
+
         self.console.config(state=NORMAL)
-        self.console.insert(END, '\n' + str(msg) )
+        self.console.insert(END,str(msg)+'\n')
         self.console.config(state=DISABLED)
         self.console.see(END)
+
+        
+        end = self.console.index("end-2c")
+
+        if color is not None:
+            self.console.tag_add(str(MainWindow.console_tag_idx), start, end)
+            self.console.tag_config(str(MainWindow.console_tag_idx), foreground=color)
+            MainWindow.console_tag_idx += 1
+
+
 
     count = 0
     def updateDisplay(self):

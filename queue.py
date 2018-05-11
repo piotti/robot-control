@@ -23,11 +23,15 @@ class RobotQueue:
         Button(master, text="Open Queue File", command=self.on_open_queue).pack()
 
 
+
+
     def show_err(self, msg):
-        tkMessageBox.showerror('Queue Error', msg)
+        # tkMessageBox.showerror('Queue Error', msg)
+        self.cnsl_print(msg, color='red')
 
     def show_info(self, msg):
-        tkMessageBox.showinfo('Notice', msg)
+        self.cnsl_print(msg, color='blue')
+        # tkMessageBox.showinfo('Notice', msg)
 
 
     def on_open_queue(self):
@@ -37,6 +41,9 @@ class RobotQueue:
             self.queue_label.pack()
             Button(self.master, text='Start Process', command=self.on_process_start).pack()
             self.file_chosen = True
+
+            self.timer_label = Label(self.master, text='', foreground='blue')
+            self.timer_label.pack()
         else:
             self.queue_label['text'] = self.fname.split('/')[-1]
 
@@ -399,7 +406,7 @@ class RobotQueue:
                 self.get_reactor_display(ID=rID).on_connect_pressed(callback=self.resume)
                 return 1
             else:
-                self.cnsl_print('NOTE: Bluetooth already connected.')
+                self.show_info('NOTE: Bluetooth already connected.')
 
         elif action == 'BLEDISCONNECT':
             '''
@@ -412,7 +419,7 @@ class RobotQueue:
                 self.get_reactor_display(ID=rID).on_connect_pressed()
                 # return 1
             else:
-                self.cnsl_print('NOTE: Bluetooth already disconnected.')
+                self.show_info('NOTE: Bluetooth already disconnected.')
 
         elif action == 'TEMPNOTIFSON':
             '''
@@ -422,7 +429,7 @@ class RobotQueue:
             '''
             
             # UNIMPLEMENTED
-            self.cnsl_print('NOTE: TEMPNOTIFSON not yet implemented. Notifs are turned on by default.')
+            self.show_info('NOTE: TEMPNOTIFSON not yet implemented. Notifs are turned on by default.')
 
         elif action == 'TEMPNOTIFSOFF':
             '''
@@ -432,7 +439,7 @@ class RobotQueue:
             '''
             
             # UNIMPLEMENTED
-            self.cnsl_print('NOTE: TEMPNOTIFSOFF not yet implemented.')
+            self.show_info('NOTE: TEMPNOTIFSOFF not yet implemented.')
 
         elif action == 'PRESSURENOTIFSON':
             '''
@@ -442,7 +449,7 @@ class RobotQueue:
             '''
             
             # UNIMPLEMENTED
-            self.cnsl_print('NOTE: PRESSURENOTIFSON not yet implemented. Notifs are turned on by default.')
+            self.show_info('NOTE: PRESSURENOTIFSON not yet implemented. Notifs are turned on by default.')
 
         elif action == 'PRESSURENOTIFSOFF':
             '''
@@ -452,7 +459,7 @@ class RobotQueue:
             '''
             
             # UNIMPLEMENTED
-            self.cnsl_print('NOTE: PRESSURENOTIFSOFF not yet implemented.')
+            self.show_info('NOTE: PRESSURENOTIFSOFF not yet implemented.')
 
         elif action == 'SETPOINT':
             '''
@@ -479,9 +486,10 @@ class RobotQueue:
             rID = int(arg1)
 
             # UNIMPLEMENTED
-            self.cnsl_print('NOTE: TEMPCONTROLON not yet implemented. Control is automatically turned on when setting the setpoint.')
+            self.show_info('NOTE: TEMPCONTROLON not yet implemented. Control is automatically turned on when setting the setpoint.')
 
         elif action == 'TEMPCONTROLOFF':
+            
             '''
             * Turns off thermocontroller
             * Arguments
@@ -489,7 +497,7 @@ class RobotQueue:
             '''
 
             # This currently just sets the setpoint to 0
-            self.cnsl_print('NOTE: TEMPCONTROLOFF currently just sets the setpoint to 0. To turn back on, call SETPOINT')
+            self.show_info('NOTE: TEMPCONTROLOFF currently just sets the setpoint to 0. To turn back on, call SETPOINT')
             rID = int(arg1)
             self.get_reactor_display(ID=rID).sp_temp.delete(0, END)
             self.get_reactor_display(ID=rID).sp_temp.insert(0, "0")
@@ -523,12 +531,13 @@ class RobotQueue:
 
             self.cnsl_print('Waiting %.3f seconds...' % (t/1000.))
             self.master.after(t, self.resume)
-            # Counter(self.master, self.cnsl_print, self.resume).start(t)
+            # Display a counter on the screen
+            Counter(self.master, self.timer_label).start(t)
             return 1
 
         elif action == 'ECHO':
             msg = arg1
-            self.cnsl_print(msg)
+            self.show_info(msg)
 
 
         else:
@@ -574,7 +583,7 @@ class RobotQueue:
             self.process()
 
         except QueueParseException:
-            self.show_info('Exiting Queue Mode')
+            self.show_err('Exiting Queue Mode')
         except ValueError:
             self.show_err('Error - step %d: Couldn\'t parse value.' % self.step)
 
@@ -614,14 +623,24 @@ class RobotQueue:
 
 
 class Counter:
-    def __init__(self, master, cnsl_print, resume):
+    def __init__(self, master, timer_label):
         self.master = master
-        self.cnsl_print = cnsl_print
-        self.resume = resume
+        self.timer_label = timer_label
+
+        self.hrs = False
+        self.mins = False
 
 
     def start(self, time_ms):
         self.timeout = time_ms/1000.
+        if self.timeout >= 60:
+            self.mins = True
+        if self.timeout >= 3600:
+            self.hrs = True
+        if self.timeout < 1:
+            # No point counting
+            return
+
         self.start_time = time.time()
         self.master.after(1000, self.update)
 
@@ -629,12 +648,26 @@ class Counter:
     def update(self):
         time_elapsed = time.time() - self.start_time
 
+
         if time_elapsed >= self.timeout:
-            self.resume()
+            # Done
+            self.timer_label['text'] = ''
             return
 
+        time_left = self.timeout - time_elapsed + 1
+
         # Update display
-        print '%.2f seconds left' % (self.timeout - time_elapsed + 1)
+        hours = int(time_left / 3600)
+        minutes = int(time_left / 60) % 60
+        seconds = int(time_left) % 60
+        if self.hrs:
+            self.timer_label['text'] = 'Time remaining: %d:%02d:%02d' % (hours, minutes, seconds)
+        elif self.mins:
+            self.timer_label['text'] = 'Time remaining: %02d:%02d' % (minutes, seconds)
+        else:
+            self.timer_label['text'] = 'Time remaining: %d seconds' % seconds
+
+
 
         self.master.after(1000, self.update)
 

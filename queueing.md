@@ -63,6 +63,18 @@ Step,Action,Arg1,Arg2,Arg3
 
 ## Actions
 
+### General
+
+* `ECHO`
+    * Echoes the given text to the console
+    * Arguments
+        1. The text to be displayed on screen (make sure it doesn't contain any commas) 
+
+* `TIMEOUT`
+    * Pauses for specified time
+    * Arguments
+        1. Timeout in milliseconds
+
 ### Setup
 * `REACTORSETUP`
     * Links the specified reactor to the specified reactor bay. This must be done before any BLE communication, or before moving a reactor to/from the bay
@@ -207,12 +219,7 @@ Step,Action,Arg1,Arg2,Arg3
         1. Reactor ID
         2. Motor speed, integer from 0-100
 
-### Time
 
-* `TIMEOUT`
-    * Pauses for specified time
-    * Arguments
-        1. Timeout in milliseconds
 
 
 

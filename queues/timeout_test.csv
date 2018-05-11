@@ -1,4 +1,4 @@
 Step,Action,Arg1,Arg2,Arg3
 
-1,TIMEOUT,5000
+1,TIMEOUT,3610000
 2,ECHO,Done waiting
