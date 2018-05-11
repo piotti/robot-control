@@ -2,7 +2,7 @@ from Tkinter import *
 import tkMessageBox as messagebox
 import tkFont
 
-from controller import Controller
+from test_controller import Controller
 
 from reactor import ReactorDisplay, ValveButton
 
@@ -65,6 +65,30 @@ class StackWindow:
 
         # Add pumps callback to print to console
         self.c.add_pump_callback(lambda msg: self.printToConsole('Pump message received: %s' % msg))
+
+        # Pressure controller display
+        pframe = Frame(master)
+        pframe.grid(row=2, column=0)
+        Label(pframe, text='Back Pressure: ').grid(row=0, column=0, sticky=W)
+        self.pressure_label = Label(pframe, text='')
+        self.pressure_label.grid(row=0, column=1, sticky=W)
+        Label(pframe, text='Set Pressure:').grid(row=1, column=0, sticky=W)
+        self.pressure_set_entry = Entry(pframe, width=12)
+        self.pressure_set_entry.grid(row=1, column=1, sticky=W)
+        Button(pframe, text='Set', command=self.on_back_pressure_set).grid(row=1, column=2, sticky=W)
+        # Add pressure callback
+        self.c.add_pressure_callback(self.on_pressure_msg)
+
+
+    def on_pressure_msg(self, msg):
+        self.printToConsole('Pressure message received: %s' % msg)
+
+
+    def on_back_pressure_set(self):
+        print 'setting back pressure to %s psi' % self.pressure_set_entry.get()
+        addr = CFG['stacks']['stack %d' % self.idx]['pressure controller address']
+        pressure = int(self.pressure_set_entry.get())
+        self.c.pressure.setPressure(addr, presure)
 
        
 

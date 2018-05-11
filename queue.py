@@ -1,6 +1,9 @@
 from Tkinter import *
 from ttk import *
 import tkFileDialog
+import tkMessageBox
+
+import time
 
 from cfg import CFG
 
@@ -18,6 +21,13 @@ class RobotQueue:
         # Make Display
 
         Button(master, text="Open Queue File", command=self.on_open_queue).pack()
+
+
+    def show_err(self, msg):
+        tkMessageBox.showerror('Queue Error', msg)
+
+    def show_info(self, msg):
+        tkMessageBox.showinfo('Notice', msg)
 
 
     def on_open_queue(self):
@@ -48,9 +58,9 @@ class RobotQueue:
         try:
             self.process()
         except QueueParseException:
-            self.cnsl_print('Exiting Queue Mode')
+            self.show_info('Exiting Queue Mode')
         except ValueError:
-            self.cnsl_print('Error - step %d: Couldn\'t parse value.' % self.step)
+            self.show_err('Error - step %d: Couldn\'t parse value.' % self.step)
 
     def process(self):
 
@@ -118,11 +128,11 @@ class RobotQueue:
             rID = int(arg1)
             pnum = int(arg2)
             if pnum not in (1,2,3,4):
-                self.cnsl_print('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
+                self.show_err('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
                 raise QueueParseException
             tnum = arg3
             if tnum not in CFG['tubes']:
-                self.cnsl_print('Error - step %d: Tube "%s" not found.' % (self.step, tnum))
+                self.show_err('Error - step %d: Tube "%s" not found.' % (self.step, tnum))
                 raise QueueParseException    
             self.get_reactor_display(ID=rID).make_tube_number_change_callback(pnum)(tnum)
 
@@ -145,7 +155,7 @@ class RobotQueue:
                 return 1
             else:
                 # Parse error
-                self.cnsl_print('Error - step %d: Direction "%s" unkown. Must be "TOSTORAGE" or "TOBAY".' % (self.step, arg2))
+                self.show_err('Error - step %d: Direction "%s" unkown. Must be "TOSTORAGE" or "TOBAY".' % (self.step, arg2))
                 raise QueueParseException
 
         elif action == 'PUMPCONNECT':
@@ -158,7 +168,7 @@ class RobotQueue:
             rID = int(arg1)
             pnum = int(arg2)
             if pnum not in (1,2,3,4):
-                self.cnsl_print('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
+                self.show_err('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
                 raise QueueParseException
             self.get_reactor_display(ID=rID).make_port_connect_callback(pnum)(callback=self.resume)
             return 1
@@ -173,7 +183,7 @@ class RobotQueue:
             rID = int(arg1)
             pnum = int(arg2)
             if pnum not in (1,2,3,4):
-                self.cnsl_print('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
+                self.show_err('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
                 raise QueueParseException
             self.get_reactor_display(ID=rID).make_port_disconnect_callback(pnum)(callback=self.resume)
             return
@@ -191,7 +201,7 @@ class RobotQueue:
             # Make sure pump has been setup
             if self.get_reactor_display(ID=rID).tube_numbers[pnum].get() not in CFG['tubes']:
                 # Error
-                self.cnsl_print('Error - step %d: Port %d not configured. Make sure to call PUMPSETUP first.' % (self.step, pnum))
+                self.show_err('Error - step %d: Port %d not configured. Make sure to call PUMPSETUP first.' % (self.step, pnum))
                 raise QueueParseException
 
             fv = arg3
@@ -512,11 +522,17 @@ class RobotQueue:
             t = int(arg1)
 
             self.cnsl_print('Waiting %.3f seconds...' % (t/1000.))
-            self.master.after(t, lambda:self.resume(None))
+            self.master.after(t, self.resume)
+            # Counter(self.master, self.cnsl_print, self.resume).start(t)
             return 1
 
+        elif action == 'ECHO':
+            msg = arg1
+            self.cnsl_print(msg)
+
+
         else:
-            self.cnsl_print('Error - step %d: Action "%s" not recognized.' % (self.step, action))
+            self.show_err('Error - step %d: Action "%s" not recognized.' % (self.step, action))
             raise QueueParseException
 
         return 0
@@ -525,7 +541,7 @@ class RobotQueue:
 
 
     # Callback used for operations that the program must wait for to finish.
-    def resume(self, msg):
+    def resume(self, msg=None):
 
         try:
 
@@ -535,7 +551,7 @@ class RobotQueue:
             if action == 'REACTORMOVE':
                 if msg == 1:
                     # Error
-                    self.cnsl_print('Error - step %d: Robot couldn\'t complete move.' % self.step)
+                    self.show_err('Error - step %d: Robot couldn\'t complete move.' % self.step)
                     raise QueueParseException
                 elif msg == 2:
                     # Internal error, which should already have been displayed on console
@@ -544,7 +560,7 @@ class RobotQueue:
             elif action == 'PUMPCONNECT' or action == 'PUMPDISCONNECT':
                 if msg == 1:
                     # Error
-                    self.cnsl_print('Error - step %d: Robot couldn\'t complete pipe move.' % self.step)
+                    self.show_err('Error - step %d: Robot couldn\'t complete pipe move.' % self.step)
                     raise QueueParseException
                 elif msg == 2:
                     # Internal error, which should already have been displayed on console
@@ -558,9 +574,9 @@ class RobotQueue:
             self.process()
 
         except QueueParseException:
-            self.cnsl_print('Exiting Queue Mode')
+            self.show_info('Exiting Queue Mode')
         except ValueError:
-            self.cnsl_print('Error - step %d: Couldn\'t parse value.' % self.step)
+            self.show_err('Error - step %d: Couldn\'t parse value.' % self.step)
 
 
 
@@ -568,7 +584,7 @@ class RobotQueue:
         if x in self.stacks:
             return self.stacks[x]
         # Error
-        self.cnsl_print('Error - step %d: Stack %d not found.' % (self.step, x))
+        self.show_err('Error - step %d: Stack %d not found.' % (self.step, x))
         raise QueueParseException
 
 
@@ -578,13 +594,13 @@ class RobotQueue:
             if ID in self.reactors:
                 return self.get_reactor_display(*self.reactors[ID])
             # Error
-            self.cnsl_print('Error - step %d: Location of reactor %d not known. Make sure to call REACTORSETUP first.' % (self.step, ID))
+            self.show_err('Error - step %d: Location of reactor %d not known. Make sure to call REACTORSETUP first.' % (self.step, ID))
             raise QueueParseException
         if x in self.stacks:
             if y in self.stacks[x].reactors:
                 return self.stacks[x].reactors[y]
         # Error
-        self.cnsl_print('Error - step %d: No such reactor position (%d,%d).' % (self.step, x, y))
+        self.show_err('Error - step %d: No such reactor position (%d,%d).' % (self.step, x, y))
         raise QueueParseException
 
 
@@ -593,8 +609,36 @@ class RobotQueue:
             if  int(CFG['reactor types'][rt]['id']) == id_:
                 return rt
         # Error
-        self.cnsl_print('Error - step %d: Reactor with ID %d not found.' % (self.step, id_))
+        self.show_err('Error - step %d: Reactor with ID %d not found.' % (self.step, id_))
         raise QueueParseException
+
+
+class Counter:
+    def __init__(self, master, cnsl_print, resume):
+        self.master = master
+        self.cnsl_print = cnsl_print
+        self.resume = resume
+
+
+    def start(self, time_ms):
+        self.timeout = time_ms/1000.
+        self.start_time = time.time()
+        self.master.after(1000, self.update)
+
+
+    def update(self):
+        time_elapsed = time.time() - self.start_time
+
+        if time_elapsed >= self.timeout:
+            self.resume()
+            return
+
+        # Update display
+        print '%.2f seconds left' % (self.timeout - time_elapsed + 1)
+
+        self.master.after(1000, self.update)
+
+
 
 
 

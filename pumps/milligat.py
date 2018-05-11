@@ -5,7 +5,7 @@ import threading
 
 
 
-class PumpController:
+class MilligatController:
 	def __init__(self, callback, ip='192.168.1.12', port=4001):
 		self.ip = ip
 		self.port=port

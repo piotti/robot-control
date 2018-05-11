@@ -1,7 +1,8 @@
 
 from ble.client import Dongle as BleDongle
 from ble.client import ble_decode as bled
-from pumps.sock import PumpController 
+from pumps.pump_controller import PumpController
+from pressure.alicat import PressureController 
 from valves.modbus import ValveController
 
 
@@ -23,10 +24,25 @@ def ble_decode(value, msbf=False):
 class Controller:
 	def __init__(self):
 		self.pump_cbs = []
+		self.pressure_cbs = []
 
 		self.pumps = None
 		self.ble = None
 		self.valves = None
+		self.pressure = None
+
+
+	def pressure_connect(self):
+		self.pressure = PressureController(self.pressure_callback, ip=CFG['pressure controller ip'], port=int(CFG['pressure controller port']))
+
+	def pressure_disconnenct(self):
+		if self.pressure is not None:
+			self.pressure.close()
+
+	def pressure_callback(self, msg):
+		print 'Pressure message received: %s' % msg
+		for pcb in self.pressure_cbs:
+			pcb(msg)
 
 	def valve_connect(self):
 		self.valves = ValveController(host=CFG["festo_ip"])
@@ -56,6 +72,9 @@ class Controller:
 
 	def add_pump_callback(self, cb):
 		self.pump_cbs.append(cb)
+
+	def add_pressure_callback(self, cb):
+		self.pressure_cbs.append(cb)
 
 	## ROBOT FUNCTIONS ##
 	def moveReactor(self, storeNum, bayNum, direction, reactorType = 'normal', between_stores = False,

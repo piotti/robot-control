@@ -7,7 +7,7 @@ import tkMessageBox as messagebox
 
 from cfg import CFG
 
-from controller import *
+from test_controller import *
 
 import time
 
@@ -254,7 +254,7 @@ class ReactorDisplay:
 			self.flow_rates[i] = Entry(frf, width=6)
 			self.flow_rates[i].grid(row=1, column=2, padx=1, pady=0)
 			# 'P Rate'
-			self.pump_types[i] = Label(f, text='P Type:', anchor=W,
+			self.pump_types[i] = Label(f, text='', anchor=W,
 					 width=12, borderwidth=2, relief='ridge')
 			self.pump_types[i].grid(row=2, column=1, padx=1, pady=5)
 			# 'P ID'
@@ -353,10 +353,10 @@ class ReactorDisplay:
 
 			if val == ' ':
 				# pump deslelected
-				self.pump_types[idx]['text'] = 'P Type: '
+				self.pump_types[idx]['text'] = ''
 				self.pump_ids[idx]['text'] = 'P ID: '
 			else:
-				self.pump_types[idx]['text'] = 'P Type: '+ str(CFG['tubes'][val]['type'])
+				self.pump_types[idx]['text'] = ''+ str(CFG['tubes'][val]['type'])
 				self.pump_ids[idx]['text'] = 'P ID: ' + str(CFG['tubes'][val]['ID'])
 		return on_tube_number_change
 	def make_reactor_valve_callback(self, idx):
@@ -373,17 +373,18 @@ class ReactorDisplay:
 			except ValueError:
 				self.cnsl( 'couldnt parse FR')
 				return 1
-			addr = self.pump_ids[idx]['text'][6:]
-			self.cnsl( 'setting pump %s to flow rate %d' % (addr, fr))
-			self.c.pumps.setFlow(addr, fr, int(CFG['tubes'][self.tube_numbers[idx].get()]['volume']))
+			tube_num = self.tube_numbers[idx].get()
+			self.cnsl( 'setting pump %s to flow rate %d' % (tube_num, fr))
+			self.c.pumps.setFlow(tube_num, fr)
 			return 0
 		return on_start_pump_pressed
 	def make_stop_pump_callback(self, idx):
 		def on_stop_pump_pressed():
 			addr = self.pump_ids[idx]['text'][6:]
 			self.flow_rates[idx].delete(0, END)
-			self.cnsl( 'stopping pump %s' % addr)
-			self.c.pumps.stopFlow(addr)
+			tube_num = self.tube_numbers[idx].get()
+			self.cnsl( 'stopping pump %s' % tube_num)
+			self.c.pumps.stopFlow(tube_num)
 		return on_stop_pump_pressed
 	def on_outlet_valve_pressed(self):
 		self.cnsl( 'on_outlet_valve_pressed')
@@ -441,10 +442,7 @@ class ReactorDisplay:
 
 	def make_write_event_callback(self, char):
 		def cb(value):
-			print 'cb', repr(value), char.name
 			value = ble_decode(value, msbf=False)
-			print 'cb decode:', value
-			print 'type', char.type
 			if char.type == 'int':
 				value = int(value, 16)
 			elif char.type == 'text':
@@ -461,7 +459,7 @@ class ReactorDisplay:
 				# Update graph
 				if self.temp_set is None:
 					print 'creating'
-					self.temp_set = add_temp_set('Reactor %d' % self.idx)
+					self.temp_set = add_temp_set(self.idx)
 					print 'done creating'
 				self.temp_set.add(value)
 				print 'added'
@@ -469,7 +467,7 @@ class ReactorDisplay:
 				self.pressure['text'] = 'Press: %d psi' % value
 				# Update graph
 				if self.pressure_set is None:
-					self.pressure_set = add_pressure_set('Reactor %d' % self.idx)
+					self.pressure_set = add_pressure_set(self.idx)
 				self.pressure_set.add(value)
 
 		return cb

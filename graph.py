@@ -126,7 +126,7 @@ class DataSet:
         self.ymin = min(y, self.ymin)
 
         # Write to file
-        fw.queue(self.typ, self.name, y, t-START_TIME)
+        fw.queue(self.typ, str(self.name), y, t-START_TIME)
 
         # If dataset more than 1000 points long, delete off end
         if len(self.ts) > 1000:
@@ -174,6 +174,7 @@ class Graph():
         self.b_ylim = (0,200)
 
         self.reactors = [int(e) for e in sorted(CFG['slots'].keys())]
+        self.reactor_names = {e:'Reactor '+str(e) for e in self.reactors}
         self.p_vars = {}
         self.t_vars = {}
         self.p_checks = {}
@@ -199,6 +200,7 @@ class Graph():
     def set_reactor_name(self, idx, name):
         self.p_checks[idx]['text'] = name
         self.t_checks[idx]['text'] = name
+        self.reactor_names[idx] = name
 
 
     # Declare and register callbacks
@@ -249,6 +251,9 @@ class Graph():
         for ds in TEMP_SETS:
             if not ds.ts:
                 continue
+            # Make sure graphing button is selected
+            if not self.t_vars[ds.name].get():
+                continue
             series.append(ds.ts + [time.time()-START_TIME])
             series.append(ds.ys + [ds.ys[-1]])
             tMax = max(ds.ts[-1], tMax)
@@ -259,7 +264,9 @@ class Graph():
 
         a.clear()
         a.plot(*series)
-        a.legend([ds.name for ds in TEMP_SETS])
+
+        a.legend([self.reactor_names[ds.name] for ds in TEMP_SETS if self.t_vars[ds.name].get()])
+        # a.legend([ds.name for ds in TEMP_SETS])
         a.set_xlabel('Time (s)')
         a.set_ylabel('Temp (C)')
         # Set limits as they were before
@@ -297,6 +304,9 @@ class Graph():
         for ds in PRESSURE_SETS:
             if not ds.ts:
                 continue
+            # Make sure graphing button is selected
+            if not self.p_vars[ds.name].get():
+                continue
             series.append(ds.ts + [time.time()-START_TIME])
             series.append(ds.ys + [ds.ys[-1]])
             tMax = max(ds.ts[-1], tMax) if ds.ts else 0
@@ -304,7 +314,8 @@ class Graph():
             yMin = min(yMin, ds.ymin)
         b.clear()
         b.plot(*series)
-        b.legend([ds.name for ds in PRESSURE_SETS])
+        b.legend([self.reactor_names[ds.name] for ds in PRESSURE_SETS if self.p_vars[ds.name].get()])
+        # b.legend([ds.name for ds in PRESSURE_SETS])
         b.set_xlabel('Time (s)')
         b.set_ylabel('Pressure (psi)')
         # Set limits as they were before
