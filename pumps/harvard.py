@@ -10,7 +10,9 @@ class HarvardController:
 		self.ip = ip
 		self.port=port
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print 'connecting...'
 		self.s.connect((ip, port))
+		print 'connected'
 		self.callback = callback
 		self.t = threading.Thread(target=self.read)
 		self.t.start()
@@ -20,10 +22,10 @@ class HarvardController:
 		while True:
 			msg=''
 			try:
-				msg= self.s.recv(32).decode('utf-8'),
+				msg= self.s.recv(32).decode('utf-8')
 			except Exception:
 				try:
-					msg = self.s.recv(32),
+					msg = self.s.recv(32)
 				except Exception:
 					traceback.print_exc()
 					exit()
@@ -37,16 +39,25 @@ class HarvardController:
 	def setFlow(self, addr, rate):
 		factor = float(rate )
 
-		self.send_msg('\n%sSRAT%05fUM\r' % (addr, factor))
+		print 'factor', factor
+		print 'msg:', '%sirate %.2f u/m\r' % (addr, factor)
+		self.send_msg('\r%sirate %.2f u/m\r' % (addr, factor))
+		if factor > 0:
+			self.startFlow(addr)
 
 	def stopFlow(self, addr):
 		self.send_msg('\r%sstp\r' % (addr))
 
-    def startFlow(self, addr):
-    	self.send_msg('\r%srun\r' % (addr))
+	def startFlow(self, addr):
+		self.send_msg('\r%srun\r' % (addr))
 
 	def close(self):
 		self.s.shutdown(socket.SHUT_RDWR)
 		self.s.close()
 
-    
+
+if __name__ == '__main__':
+	def cb(msg):
+		print msg,
+
+	c = HarvardController(cb, '192.168.1.12', 4002)

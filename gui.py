@@ -2,7 +2,7 @@ from Tkinter import *
 import tkMessageBox as messagebox
 import tkFont
 
-from test_controller import Controller
+from controller import Controller
 
 from reactor import ReactorDisplay, ValveButton
 
@@ -85,10 +85,13 @@ class StackWindow:
 
 
     def on_back_pressure_set(self):
-        print 'setting back pressure to %s psi' % self.pressure_set_entry.get()
+        # print 'setting back pressure to %s psi' % self.pressure_set_entry.get()
         addr = CFG['stacks']['stack %d' % self.idx]['pressure controller address']
         pressure = int(self.pressure_set_entry.get())
-        self.c.pressure.setPressure(addr, presure)
+        self.c.pressure.setPressure(addr, pressure)
+
+        self.cnsl_print('Back Pressure Set to %d psi' % pressure)
+        self.pressure_label['text'] = '%d psi' % pressure
 
         # TESTING: setting colors
         # self.cnsl_print("hello \n world", color=self.pressure_set_entry.get())
@@ -121,6 +124,7 @@ class MainWindow:
         c.valve_connect()
         c.pumps_connect()
         c.ble_connect()
+        c.pressure_connect()
         self.c = c
 
         # tl1 = Toplevel(self.master)
@@ -228,6 +232,8 @@ class MainWindow:
         print 'closing...'
         self.c.valve_disconnect()
         self.c.pumps_disconnect()
+        self.c.pressure_disconnect()
+
         self.master.destroy()
         exit()
 

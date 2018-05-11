@@ -7,7 +7,7 @@ import tkMessageBox as messagebox
 
 from cfg import CFG
 
-from test_controller import *
+from controller import *
 
 import time
 

@@ -6,7 +6,7 @@ import threading
 
 
 class PressureController:
-	def __init__(self, callback, ip='192.168.1.12', port=4002):
+	def __init__(self, callback, ip, port):
 		self.ip = ip
 		self.port=port
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -20,10 +20,10 @@ class PressureController:
 		while True:
 			msg=''
 			try:
-				msg= self.s.recv(32).decode('utf-8'),
+				msg= self.s.recv(1).decode('utf-8')
 			except Exception:
 				try:
-					msg = self.s.recv(32),
+					msg = self.s.recv(1)
 				except Exception:
 					traceback.print_exc()
 					exit()
@@ -34,9 +34,9 @@ class PressureController:
 		msg = unicode(msg)
 		self.s.sendall(msg)
 
-	def setPressure(self, addr, presure):
+	def setPressure(self, addr, pressure):
 		factor = float(pressure)
-		self.send_msg('\r%sS%d\r' % (addr, int(factor)))
+		self.send_msg('%sS%d\r' % (addr, int(factor)))
 
 	def zeroPressure(self, addr):
 		self.setPressure(addr, 0)
@@ -45,6 +45,9 @@ class PressureController:
 		self.s.shutdown(socket.SHUT_RDWR)
 		self.s.close()
 
+
 if __name__ == '__main__':
-    PressureController()
-    
+	def cb(msg):
+		print msg,
+
+	c = PressureController(cb, '192.168.1.12', 4003)

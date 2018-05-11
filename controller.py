@@ -35,7 +35,7 @@ class Controller:
 	def pressure_connect(self):
 		self.pressure = PressureController(self.pressure_callback, ip=CFG['pressure controller ip'], port=int(CFG['pressure controller port']))
 
-	def pressure_disconnenct(self):
+	def pressure_disconnect(self):
 		if self.pressure is not None:
 			self.pressure.close()
 
@@ -64,7 +64,7 @@ class Controller:
 			pcb(msg)
 
 	def pumps_connect(self):
-		self.pumps = PumpController(self.pump_callback, ip=CFG["pumps_ip"], port=int(CFG["pumps_port"]))
+		self.pumps = PumpController(self.pump_callback, CFG)
 
 	def pumps_disconnect(self):
 		if self.pumps is not None:
