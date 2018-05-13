@@ -110,7 +110,9 @@ class BleCharacteristic:
         self.has_notify = name=='Temperature' or name=='Pressure'
 
 class Controller:
-    def __init__(self):
+    def __init__(self, cnsl_print):
+        self.cnsl_print = cnsl_print 
+        
         self.pump_cbs = []
         self.pressure_cbs = []
 

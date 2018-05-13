@@ -224,13 +224,14 @@ class ReactorDisplay:
 			f = Frame(master)
 			f.grid(row=idx+1, column=2+i-3, padx=1, pady=1, sticky=N)
 			# 'Port 1'
+			state = NORMAL if int(CFG['slots'][str(idx)]['port %d' % i]) >= 0 else DISABLED
 			pf = Frame(f, borderwidth=2, relief='ridge')
 			pf.grid(row=0, column=0, columnspan=2, padx=1, pady=5)
 			Label(pf, text='Port %d' % i,  width=6).grid(
 				row=0, column=0, padx=1)
-			self.port_btns[i]['connect'] = Button(pf, text='Connect', command=self.make_port_connect_callback(i)).grid(
+			self.port_btns[i]['connect'] = Button(pf, text='Connect', command=self.make_port_connect_callback(i) if state==NORMAL else lambda:None, state=state).grid(
 				row=0, column=1, padx=1)
-			self.port_btns[i]['disconnect'] = Button(pf, text='Disconnect', command=self.make_port_disconnect_callback(i)).grid(
+			self.port_btns[i]['disconnect'] = Button(pf, text='Disconnect', command=self.make_port_disconnect_callback(i) if state==NORMAL else lambda:None, state=state).grid(
 				row=0, column=2, padx=1)
 			# 'Tube #'
 			tf = Frame(f, borderwidth=2, relief='ridge')
@@ -486,12 +487,15 @@ class ReactorDisplay:
 		self.connection.write(self.chars['1196'].handle, val, 'int')
 		return 0
 
-	def on_move_to_storage(self, callback=lambda x: None):
+	def on_move_to_storage(self, callback=None):
 		reactor = self.reactor_type.get()
 		# position = CFG['reactor types'][reactor]['position']
 		if reactor == ' ':
 			self.cnsl('Error: no reactor chosen.')
-			return callback(2)
+			if callback is not None:
+				return callback(2)
+			else:
+				return 
 
 		position = (int(CFG['reactor types'][reactor]['storage x']), int(CFG['reactor types'][reactor]['storage y']))
 		# bay = self.idx - 1
@@ -500,12 +504,15 @@ class ReactorDisplay:
 		self.cnsl('Moving reactor %s from bay slot %s to storage slot %s' % (reactor, str(bay), str(position)))
 		self.c.moveReactor(position, bay, -1, callback=callback)
 
-	def on_move_to_stack(self, callback=lambda x: None):
+	def on_move_to_stack(self, callback=None):
 		reactor = self.reactor_type.get()
 
 		if reactor == ' ':
 			self.cnsl('Error: no reactor chosen.')
-			return callback(2)
+			if callback is not None:
+				return callback(2)
+			else:
+				return 
 
 		# position = CFG['reactor types'][reactor]['position']
 		position = (int(CFG['reactor types'][reactor]['storage x']), int(CFG['reactor types'][reactor]['storage y']))
@@ -516,12 +523,13 @@ class ReactorDisplay:
 		self.c.moveReactor(position, bay, 1, callback=callback)
 
 	def make_port_connect_callback(self, idx):
-		def cb(callback=lambda x: None):
+		def cb(callback=None):
 			tube = self.tube_numbers[idx].get()
 			if tube == ' ':
 				self.cnsl('Error: No tube selected')
 				# Report error to queueing callback
-				callback(2)
+				if callback is not None:
+					callback(2)
 				return
 			port = idx
 			tower_num = CFG['slots'][str(self.idx)]["port %d" % port]
@@ -534,13 +542,15 @@ class ReactorDisplay:
 		return cb
 
 	def make_port_disconnect_callback(self, idx):
-		def cb(callback=lambda x: None):
+		def cb(callback=None):
 			tube = self.tube_numbers[idx].get()
 			if tube == ' ':
 				self.cnsl('Error: No tube selected')
 				# Report error to queueing callback
-				callback(2)
+				if callback is not None:
+					callback(2) 
 				return
+				
 			port = idx
 			tower_num = CFG['slots'][str(self.idx)]["port %d" % port]
 			if tower_num < 0:

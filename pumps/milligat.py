@@ -16,24 +16,47 @@ class MilligatController:
 		except Exception:
 			print 'could not connect to pumps'
 			return
+
+
+		self.running = True
+		self.s.settimeout(2)
+
+
 		self.callback = callback
 
 		self.t = threading.Thread(target=self.read)
 		self.t.start()
 
 	def read(self):
-		while True:
+		while self.running:
 			msg=''
 			try:
-				msg= self.s.recv(16).decode('utf-8'),
+				msg= self.s.recv(32).decode('utf-8')
+			except socket.timeout, e:
+				err = e.args[0]
+				# this next if/else is a bit redundant, but illustrates how the
+				# timeout exception is setup
+				if err == 'timed out':
+					# print 'timeout'
+					continue
+				else:
+					print e
+					sys.exit(1)
+			except socket.error, e:
+					# Something else happened, handle error, exit, etc.
+					print e
+					exit()
 			except Exception:
 				try:
-					msg = self.s.recv(16),
+					msg = self.s.recv(32)
 				except Exception:
 					traceback.print_exc()
 					exit()
-			self.callback(msg)
-			time.sleep(.25)
+
+			if msg.strip():
+				self.callback(msg)
+			time.sleep(2)
+
 
 	def send_msg(self, msg):
 		msg = unicode(msg)
@@ -58,5 +81,7 @@ class MilligatController:
 	def stopFlow(self, addr):
 		self.setFlow(addr, 0, 1)
 	def stop(self):
-		self.s.shutdown(socket.SHUT_RDWR)
+		print 'disconnecting from milligat'
+		self.running = False
+		self.s.shutdown(1)
 		self.s.close()

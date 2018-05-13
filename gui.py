@@ -17,10 +17,6 @@ from ttk import *
 
 from queue import RobotQueue
 
-import Queue
-
-import threading
-
 class StackWindow:
     def __init__(self, master, idx, c, cnsl_print, graph):
         self.master = master
@@ -34,11 +30,7 @@ class StackWindow:
 
         self.reactors = {}
 
-
-
-
         slots = CFG['stacks']['stack %d' % idx]['slots']
-
 
 
         # 'Close Reactor Stack'
@@ -102,11 +94,8 @@ class MainWindow:
     def __init__(self, master):
         self.master = master
         master.title("Robot Control")
-        master.minsize(width=1800, height=900)
+        master.minsize(width=1600, height=900)
         master.protocol("WM_DELETE_WINDOW", self.close)
-
-
-        self.queue = Queue.Queue()
 
         # Display graph
         # self.graph = Graph(master)
@@ -115,12 +104,11 @@ class MainWindow:
 
         self.start()
 
-        # threading.Thread(target=self.updateDisplay).start()
 
     def start(self):
 
         # Connect to controllers
-        c = Controller()
+        c = Controller(self.print_to_console)
         c.valve_connect()
         c.pumps_connect()
         c.ble_connect()
@@ -175,7 +163,7 @@ class MainWindow:
 
         # Display queueing options
         tl3 = Frame(self.master)
-        self.robot_queue = RobotQueue(tl3, self.print_to_console, self.stacks, self.queue)
+        self.robot_queue = RobotQueue(tl3, self.print_to_console, self.stacks)
         tl3.grid(row=1, column=0, sticky=N+E+W)
 
 
@@ -198,33 +186,7 @@ class MainWindow:
         if color is not None:
             self.console.tag_add(str(MainWindow.console_tag_idx), start, end)
             self.console.tag_config(str(MainWindow.console_tag_idx), foreground=color)
-            MainWindow.console_tag_idx += 1
-
-
-
-    count = 0
-    def updateDisplay(self):
-        # print 'updating'
-        # self.stacks[0].reactors[0].read_id_btn.btn['text'] = str(self.count)
-        self.count += 1
-        while self.queue.qsize():
-            try:
-                msg = self.queue.get(0)
-                # self.stacks[0].reactors[0].ble_id['text'] = 'boi'
-                # self.stacks[0].reactors[0].on_reactor_type_change('1ml (00795)')
-                # Check contents of message and do what it says
-                # As a test, we simply print it
-                print 'msg' + str(msg)
-                func = msg[0]
-                args = msg[1:]
-                func(*args)
-
-
-            except Queue.Empty:
-                pass
-
-        self.master.after(100, self.updateDisplay)
-        
+            MainWindow.console_tag_idx += 1        
 
 
 

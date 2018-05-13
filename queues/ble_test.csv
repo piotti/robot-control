@@ -1,36 +1,36 @@
 Step,Action,Arg1,Arg2,Arg3
 
-# Link Reactor 2 to bay (0; 0)
-1,REACTORSETUP,1,0 0
+# Link Reactor 2 to bay (0; 1)
+1,REACTORSETUP,0,0 1
 
 # Close the jaw to power up the reactor
-3,REACTORJAWCLOSE,1
+3,REACTORJAWCLOSE,0
 
 # Wait 3 seconds for jaw to close and for PSoC to power up
 4,TIMEOUT,3000
 
 # Initiate Bluetooth connection
-5,BLECONNECT,1
+5,BLECONNECT,0
 
-# Start heating to 100 degrees C
-6,SETPOINT,1,100
+# Start heating to 200 degrees C
+6,SETPOINT,0,100
 
 # Wait 10 seconds (10000 ms)
-7,TIMEOUT,10000
+7,TIMEOUT,60000
 
 # Turn off heater
-8,SETPOINT,1,0
+8,SETPOINT,0,0
 
 # Wait 1 seconds (1000 ms)
 9,TIMEOUT,1000
 
 # Bluetooth disconnect
-10,BLEDISCONNECT,1
+10,BLEDISCONNECT,0
 
 # Wait a bit
 11,TIMEOUT,2000
 
 # Open jaw
-12,REACTORJAWOPEN,1
+12,REACTORJAWOPEN,0
 
 

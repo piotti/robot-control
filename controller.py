@@ -5,24 +5,32 @@ from pumps.pump_controller import PumpController
 from pressure.alicat import PressureController 
 from valves.modbus import ValveController
 
+import nidaq
+
+from cfg import CFG
+
 
 
 import sys
 sys.path.insert(0, 'C:\Users\ROB\Dropbox\Robotic_Toolbox\Robot\UR3')
-# import robot_use
+
+if CFG['UR3'] in ('True', 'true'):
+	import robot_use
 
 
 import threading
 import time
 
-from cfg import CFG
 
 def ble_decode(value, msbf=False):
 	return bled(value, msbf)
 
 
 class Controller:
-	def __init__(self):
+	def __init__(self, cnsl_print):
+
+		self.cnsl_print = cnsl_print
+
 		self.pump_cbs = []
 		self.pressure_cbs = []
 
@@ -78,18 +86,66 @@ class Controller:
 
 	## ROBOT FUNCTIONS ##
 	def moveReactor(self, storeNum, bayNum, direction, reactorType = 'normal', between_stores = False,
-		between_bays = False, verbose = None, callback=lambda x: None):
+		between_bays = False, verbose = None, callback=None):
+
+		def default_cb(err):
+			if err == 0:
+				self.cnsl_print('Reactor successfully moved')
+			else:
+				self.cnsl_print('Error: Robot failed to move reactor', color='red')
+		if callback is None:
+			callback = default_cb
+
 		print 'moving reactor'
 		print storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose
+		storeNum = int(storeNum)
+		direction = int(direction)
+		bayNum = int(bayNum)
+
 
 		# Start thread
-		t = threading.Thread(target=robot_use.moveReactor, args = (storeNum, bayNum, direction, reactorType, between_stores,
-			between_bays, verbose, callback))
+		t = threading.Thread(target=move_reactor_thread, args = (storeNum, bayNum, direction, callback))
 		t.start()
 
-	def movePipe(nearNum, farNum, direction, xDisp = .05, yDisp = .03, callback=lambda x: None):
+	def movePipe(self, nearNum, farNum, direction, callback=None):
+
+		def default_cb(err):
+			if err == 0:
+				self.cnsl_print('Pipe successfully moved')
+			else:
+				self.cnsl_print('Error: Robot failed to move pipe', color='red')
+		if callback is None:
+			callback = default_cb
+
+
 		print 'moving pipe'
-		print nearNum, farNum, direction, xDisp, yDisp
+		print nearNum, farNum, direction
+		nearNum = int(nearNum)
+		nfarum = int(farNum)
+		direction = int(direction)
 
-		t = threading.Thread(target=robot_use.movePipe, args = (nearNum, farNum, direction, xDisp, yDisp, callback))
+		# Start motors
+		nidaq.start()
+
+		t = threading.Thread(target=move_pipe_thread, args = (nearNum, farNum, direction, callback))
 		t.start()
+
+
+
+def move_reactor_thread(storeNum, bayNum, direction, callback):
+	if robot_use.moveReactor(storeNum, bayNum, direction):
+		callback(0)
+	else:
+		callback(1)
+
+
+def move_pipe_thread(nearNum, farNum, direction, callback):
+	result = robot_use.movePipe(nearNum, farNum, direction)
+
+	# Stop motors
+	nidaq.stop()
+
+	if result:
+		callback(0)
+	else:
+		callback(1)

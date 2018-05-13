@@ -11,12 +11,11 @@ import threading
 
 class RobotQueue:
 
-    def __init__(self, master, cnsl_print, stacks, queue):
+    def __init__(self, master, cnsl_print, stacks):
         self.master = master
         self.file_chosen = False
         self.cnsl_print = cnsl_print
         self.stacks = stacks
-        self.queue = queue
 
         # Make Display
 

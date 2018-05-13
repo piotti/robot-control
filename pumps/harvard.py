@@ -10,27 +10,46 @@ class HarvardController:
 		self.ip = ip
 		self.port=port
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		print 'connecting...'
 		self.s.connect((ip, port))
-		print 'connected'
+
+		self.s.settimeout(2)
+
+		self.running = True
+
 		self.callback = callback
 		self.t = threading.Thread(target=self.read)
 		self.t.start()
 
 
 	def read(self):
-		while True:
+		while self.running:
 			msg=''
 			try:
 				msg= self.s.recv(32).decode('utf-8')
+			except socket.timeout, e:
+				err = e.args[0]
+				# this next if/else is a bit redundant, but illustrates how the
+				# timeout exception is setup
+				if err == 'timed out':
+					# print 'timeout'
+					continue
+				else:
+					print e
+					sys.exit(1)
+			except socket.error, e:
+					# Something else happened, handle error, exit, etc.
+					print e
+					exit()
 			except Exception:
 				try:
 					msg = self.s.recv(32)
 				except Exception:
 					traceback.print_exc()
 					exit()
-			self.callback(msg)
-			time.sleep(.25)
+
+			if msg.strip():
+				self.callback(msg)
+			time.sleep(2)
 
 	def send_msg(self, msg):
 		msg = unicode(msg)
@@ -52,7 +71,9 @@ class HarvardController:
 		self.send_msg('\r%srun\r' % (addr))
 
 	def close(self):
-		self.s.shutdown(socket.SHUT_RDWR)
+		print 'disconnecting from harvard'
+		self.running = False
+		self.s.shutdown(1)
 		self.s.close()
 
 
