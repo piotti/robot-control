@@ -501,8 +501,8 @@ class ReactorDisplay:
 		# bay = self.idx - 1
 		bay = (self.stack_idx, self.idx)
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
-		self.cnsl('Moving reactor %s from bay slot %s to storage slot %s' % (reactor, str(bay), str(position)))
-		self.c.moveReactor(position, bay, -1, callback=callback)
+		self.cnsl('Moving reactor %s from bay slot %s to storage lsot %s' % (reactor, str(bay), str(position)))
+		self.c.moveReactor(position, bay, -1, type=CFG['reactor types'][reactor]['type'], callback=callback)
 
 	def on_move_to_stack(self, callback=None):
 		reactor = self.reactor_type.get()
@@ -520,7 +520,7 @@ class ReactorDisplay:
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
 		bay = (self.stack_idx, self.idx)
 		self.cnsl('Moving reactor %s from storage slot %s to bay slot %s' % (reactor, str(position), str(bay)))
-		self.c.moveReactor(position, bay, 1, callback=callback)
+		self.c.moveReactor(position, bay, 1, type=CFG['reactor types'][reactor]['type'], callback=callback)
 
 	def make_port_connect_callback(self, idx):
 		def cb(callback=None):

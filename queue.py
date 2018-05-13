@@ -538,6 +538,20 @@ class RobotQueue:
             msg = arg1
             self.show_info(msg)
 
+        elif action == 'PRESSURESET':
+            '''
+            * Sets the Back Pressure of the stack accordingly
+            * Arguments
+                1. Stack ID
+                2. Pressure in psi
+            '''
+            x = int(arg1)
+            pressure = arg2
+            self.get_stack_window(x).pressure_set_entry.set(arg2)
+            self.get_stack_window(x).on_back_pressure_set()
+
+
+
 
         else:
             self.show_err('Error - step %d: Action "%s" not recognized.' % (self.step, action))
