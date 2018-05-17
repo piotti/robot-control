@@ -6,3 +6,8 @@
 * Incorporate NI motor control
 * Queueing:
 	* Ability to exit out of queueing process
+
+# Dale Issues 
+* Stop or pause the sequence 
+* Restart queue upon robot timeout 
+* Variable timing for the length of synthesis 
