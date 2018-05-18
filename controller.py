@@ -98,9 +98,9 @@ class Controller:
 
 		print 'moving reactor'
 		print storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose
-		storeNum = int(storeNum)
+		storeNum = storeNum
 		direction = int(direction)
-		bayNum = int(bayNum)
+		bayNum = bayNum
 
 
 		# Start thread
