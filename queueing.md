@@ -87,6 +87,11 @@ Step,Action,Arg1,Arg2,Arg3
         1. Reactor ID
         2. Port number (1, 2, 3, or 4)
         3. Tube number, correlating to a pump (see config file)
+* 'PRESSURESET'
+    * Sets the Back Pressure of the stack
+        * Arguments
+            1. Stack number (same as `x` coordinate of reactor bays)
+            2. Pressure in psi
 
 ### Moving Reactors
 * `REACTORMOVE`
@@ -218,6 +223,7 @@ Step,Action,Arg1,Arg2,Arg3
     * Arguments
         1. Reactor ID
         2. Motor speed, integer from 0-100
+
 
 
 
