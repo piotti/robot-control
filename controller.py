@@ -104,7 +104,7 @@ class Controller:
 
 
 		# Start thread
-		t = threading.Thread(target=move_reactor_thread, args = (storeNum, bayNum, direction, callback))
+		t = threading.Thread(target=move_reactor_thread, args = (storeNum, bayNum, direction, reactorType, callback))
 		t.start()
 
 	def movePipe(self, nearNum, farNum, direction, callback=None):
@@ -132,8 +132,8 @@ class Controller:
 
 
 
-def move_reactor_thread(storeNum, bayNum, direction, callback):
-	if robot_use.moveReactor(storeNum, bayNum, direction):
+def move_reactor_thread(storeNum, bayNum, direction, reactorType, callback):
+	if robot_use.moveReactor(storeNum, bayNum, direction, reactorType):
 		callback(0)
 	else:
 		callback(1)

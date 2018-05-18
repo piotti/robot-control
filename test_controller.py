@@ -127,7 +127,7 @@ class Controller:
     def pressure_connect(self):
         self.pressure = PressureController(self.pressure_callback, ip=CFG['pressure controller ip'], port=int(CFG['pressure controller port']))
 
-    def pressure_disconnenct(self):
+    def pressure_disconnect(self):
         if self.pressure is not None:
             self.pressure.close()
 
