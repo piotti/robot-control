@@ -72,6 +72,8 @@ class Dongle(BlueGigaClient):
         # Scan for psoc
         responses = self.scan_all(timeout=10)
         target = None
+        if responses is None:
+            return None
         for resp in responses:
             if ble_decode(resp.get_sender_address()) == addr:
                 print 'found ' + addr
