@@ -1,7 +1,6 @@
 import sys
 sys.path.append('..')
-import cfg
-CFG = cfg.CFG
+from cfg import CFG
 
 from Tkinter import *
 

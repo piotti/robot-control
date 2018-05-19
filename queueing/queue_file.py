@@ -2,6 +2,11 @@ from Tkinter import *
 
 from queue_api import TIMEOUT_CALLS, BLOCKING_CALLS
 
+COLOR_EXECUTING = 'yellow'
+COLOR_FINISHED = 'blue'
+COLOR_ERROR = 'red'
+COLOR_FILE = '#256d47'
+
 
 class QueueFileManager:
 
@@ -36,7 +41,7 @@ class QueueFileManager:
 
         # Display file name
         self.print_to_console(fname.split('/')[-1], tag='line 0')
-        self.color_console_line(-1, 'blue')
+        self.color_console_line(-1, COLOR_FILE)
 
         # Display whole file in console
         for i, l in enumerate(self.lines):
@@ -57,50 +62,76 @@ class QueueFileManager:
 
 
     def error(self):
-        self.color_console_line(self.file_idx-1, 'red') 
+        self.color_console_line(self.file_idx-1, COLOR_ERROR) 
 
 
 
     def mode_change(self, auto):
         if not auto and self.command in TIMEOUT_CALLS:
-            self.color_console_line(self.file_idx-1, 'blue') 
-
-        # if self.file_idx > 0 and not executing:
-        #     self.color_console_line(self.file_idx-1, 'blue' if auto else 'purple') 
+            self.color_console_line(self.file_idx-1, COLOR_FINISHED)
 
     def done_executing(self):
         if self.file_idx > 0:
-            self.color_console_line(self.file_idx-1, 'blue') 
+            self.color_console_line(self.file_idx-1, COLOR_FINISHED)
+
+
+    def seek(self, direction):
+        # direction: negative for backwards, positive for forwards
+        current = self.file_idx-1
+        print 'current,', current
+
+        if 0 <= current+direction < len(self.lines):
+            if current >= 0:
+                self.color_console_line(current, 'black')
+            self.color_console_line(current + direction, 'blue')
+            self.file_idx += direction
+            self.console.yview('%d.0' % (self.file_idx-3))
+
+        else:
+            print 'out of range'
+
+
+    def parse_line(self, idx):
+        line = self.lines[idx]
+        parts = line.split(',')
+        step, action = parts[:2]
+        arg1 = parts[2].strip() if len(parts) > 2 else ''
+        arg2 = parts[3].strip() if len(parts) > 3 else ''
+        arg3 = parts[4].strip() if len(parts) > 4 else ''
+        step = int(step.strip())
+        action = action.strip()
+        arg1 = arg1.strip()
+
+        return (step, action, arg1, arg2, arg3)
 
 
 
     def get_next_line(self, auto):
 
         while self.file_idx < len(self.lines):
-            line = self.lines[self.file_idx]
-
-            command = line.split(',')[1].strip()
-            self.command = command
+            
+            (step, action, arg1, arg2, arg3) = self.parse_line(self.file_idx)
+            self.command = action
 
             # Highlight line
-            if command in BLOCKING_CALLS:
-                if command in TIMEOUT_CALLS and not auto:
-                    self.color_console_line(self.file_idx, 'blue')
+            if self.command in BLOCKING_CALLS:
+                if self.command in TIMEOUT_CALLS and not auto:
+                    self.color_console_line(self.file_idx, COLOR_FINISHED)
                 else:
-                    self.color_console_line(self.file_idx, 'yellow')
+                    self.color_console_line(self.file_idx, COLOR_EXECUTING)
             else:
-                self.color_console_line(self.file_idx, 'blue')
+                self.color_console_line(self.file_idx, COLOR_FINISHED)
 
             # Unhighlight previous line
-            self.color_console_line(self.file_idx - 1, 'black')
+            if self.file_idx > 0:
+                self.color_console_line(self.file_idx - 1, 'black')
 
             self.file_idx += 1
 
             # Scroll to line
-            self.console.see('%d.0' % (self.file_idx+5))
+            self.console.yview('%d.0' % (self.file_idx-3))
 
-              
-            return line
+            return (step, action, arg1, arg2, arg3)
 
         return None
 
@@ -108,28 +139,18 @@ class QueueFileManager:
         if self.file_idx == 0:
             # nothing to be repeated (haven't started yet)
             return None
-        return self.lines[self.file_idx-1]
-
-
-
+        return self.parse_line(self.file_idx-1)
 
     def color_console_line(self, line, color):
         self.console.tag_config('line %d' % (line+1), foreground=color)
 
-
-
     def print_to_console(self, msg, tag=None):
-
-
         start = self.console.index("end-1c")
-
 
         self.console.config(state=NORMAL)
         self.console.insert(END,str(msg)+'\n')
         self.console.config(state=DISABLED)
-        # self.console.see(END)
 
-        
         end = self.console.index("end-2c")
 
         if tag is not None:
