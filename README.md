@@ -1,3 +1,3 @@
 # robot-control
 
-For Queueing API reference, see [a relative link](queueing.md)
+For Queueing API reference, see [queueing.md](queueing.md)
