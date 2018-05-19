@@ -62,7 +62,7 @@ Step,Action,Arg1,Arg2,Arg3
 ## Settings
 These commands globally affect the processing environment.
 
-* 'ERRORHANDLE'
+* `ERRORHANDLE`
     * Sets how the program handles errors thrown by a certain command.
     * Arguments
         1. The command you want to handle errors for (e.g., `REACTORMOVE`)
