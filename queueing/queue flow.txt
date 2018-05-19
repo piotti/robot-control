@@ -1,0 +1,23 @@
+
+
+
+Modes: Automatic, Manual
+
+hit start
+excecute instruction
+executing flag true
+insruction ends (resume called or not blocking)
+executing flag false
+if automatic:
+    read next line
+    goto execute instruction 
+
+
+if step hit:
+    if automatic, do nothing. else:
+        if executing, do nothing. else:
+            read next line
+            goto execute instruction
+
+if redo hit
+     

@@ -1,109 +1,37 @@
+import sys
+sys.path.append('..')
+import cfg
+CFG = cfg.CFG
+
 from Tkinter import *
-from ttk import *
-import tkFileDialog
-import tkMessageBox
 
-import time
 
-from cfg import CFG
+BLOCKING_CALLS = ('REACTORMOVE', 'PUMPCONNECT', 'PUMPDISCONNECT', 'BLECONNECT', 'TIMEOUT')
+TIMEOUT_CALLS = ('TIMEOUT',)
+    
 
-import threading
+class QueueApi:
 
-class RobotQueue:
-
-    def __init__(self, master, cnsl_print, stacks):
-        self.master = master
-        self.file_chosen = False
-        self.cnsl_print = cnsl_print
+    def __init__(self, stacks, show_info, counter, queue_resume, set_control):
         self.stacks = stacks
+        self.show_info = show_info
+        self.counter = counter
+        self.queue_resume = queue_resume
+        self.set_control = set_control
 
-        # Make Display
-
-        Button(master, text="Open Queue File", command=self.on_open_queue).pack()
-
-
-
-
-    def show_err(self, msg):
-        # tkMessageBox.showerror('Queue Error', msg)
-        self.cnsl_print(msg, color='red')
-
-    def show_info(self, msg):
-        self.cnsl_print(msg, color='blue')
-        # tkMessageBox.showinfo('Notice', msg)
+        self.reset()
 
 
-    def on_open_queue(self):
-        self.fname = tkFileDialog.askopenfilename(initialdir = "queues/",title = "Select Queue",filetypes = (("CSV files","*.csv"),("all files","*.*")))
-        if not self.file_chosen:
-            self.queue_label = Label(self.master, text=self.fname.split('/')[-1])
-            self.queue_label.pack()
-            Button(self.master, text='Start Process', command=self.on_process_start).pack()
-            self.file_chosen = True
-
-            self.timer_label = Label(self.master, text='', foreground='blue')
-            self.timer_label.pack()
-        else:
-            self.queue_label['text'] = self.fname.split('/')[-1]
-
-    def on_process_start(self):
-        # Variables stored for queueing system
-        self.step = 0
-        self.actions = []
+    def reset(self):
+        # Clear state variables
         self.reactors = {}
-        self.read_idx = 0
-
-        # Open file
-        self.file = open(self.fname, 'r')
-
-        # Read Header
-        self.file.readline()
-
-        # t = threading.Thread(target=self.start_process)
-        # t.start()
-        try:
-            self.process()
-        except QueueParseException:
-            self.show_info('Exiting Queue Mode')
-        except ValueError:
-            self.show_err('Error - step %d: Couldn\'t parse value.' % self.step)
-
-    def process(self):
-
-        while True:
-            line = self.file.readline()
-            self.read_idx += 1
-            if line == '':
-                # Whole file has been read
-                break
-            if line[0] == '#':
-                # Its a comment, ignore
-                continue
-            if not line.strip():
-                # Empty line
-                continue
-            
-
-            parts = line.split(',')
-            step, action, arg1 = parts[:3]
-            arg2 = parts[3].strip() if len(parts) > 3 else ''
-            arg3 = parts[4].strip() if len(parts) > 4 else ''
-            step = int(step.strip())
-            action = action.strip()
-            arg1 = arg1.strip()
-            self.step = step
-            self.actions.append(action)
-            self.cnsl_print('Step %d: %s %s %s %s' % (step, action, arg1, arg2, arg3))
-
-            # parse action
-            status = self.parse_action(action, arg1, arg2, arg3)
-            if status == 1:
-                # A blocking call was made, exit and wait for callback to resume
-                return
 
 
+    def parse_action(self, auto, step, action, arg1, arg2, arg3):
 
-    def parse_action(self, action, arg1, arg2, arg3):
+        self.step = step
+        self.action = action
+
         if action == 'REACTORSETUP':
             '''
             * Links the specified reactor to the specified reactor bay. This must be done before any
@@ -134,12 +62,12 @@ class RobotQueue:
             rID = int(arg1)
             pnum = int(arg2)
             if pnum not in (1,2,3,4):
-                self.show_err('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
-                raise QueueParseException
+                raise QueueParseException('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
+                
             tnum = arg3
             if tnum not in CFG['tubes']:
-                self.show_err('Error - step %d: Tube "%s" not found.' % (self.step, tnum))
-                raise QueueParseException    
+                raise QueueParseException('Error - step %d: Tube "%s" not found.' % (self.step, tnum))
+                 
             self.get_reactor_display(ID=rID).make_tube_number_change_callback(pnum)(tnum)
 
         elif action == 'REACTORMOVE':
@@ -154,15 +82,15 @@ class RobotQueue:
             '''
             rID = int(arg1)
             if arg2 == 'TOBAY':
-                self.get_reactor_display(ID=rID).on_move_to_stack(callback=self.resume)
+                self.get_reactor_display(ID=rID).on_move_to_stack(callback=self.queue_resume)
                 return 1
             elif arg2 == 'TOSTORAGE':
-                self.get_reactor_display(ID=rID).on_move_to_storage(callback=self.resume)
+                self.get_reactor_display(ID=rID).on_move_to_storage(callback=self.queue_resume)
                 return 1
             else:
                 # Parse error
-                self.show_err('Error - step %d: Direction "%s" unkown. Must be "TOSTORAGE" or "TOBAY".' % (self.step, arg2))
-                raise QueueParseException
+                raise QueueParseException('Error - step %d: Direction "%s" unkown. Must be "TOSTORAGE" or "TOBAY".' % (self.step, arg2))
+                
 
         elif action == 'PUMPCONNECT':
             '''
@@ -174,9 +102,9 @@ class RobotQueue:
             rID = int(arg1)
             pnum = int(arg2)
             if pnum not in (1,2,3,4):
-                self.show_err('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
-                raise QueueParseException
-            self.get_reactor_display(ID=rID).make_port_connect_callback(pnum)(callback=self.resume)
+                raise QueueParseException('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
+                
+            self.get_reactor_display(ID=rID).make_port_connect_callback(pnum)(callback=self.queue_resume)
             return 1
 
         elif action == 'PUMPDISCONNECT':
@@ -189,9 +117,9 @@ class RobotQueue:
             rID = int(arg1)
             pnum = int(arg2)
             if pnum not in (1,2,3,4):
-                self.show_err('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
-                raise QueueParseException
-            self.get_reactor_display(ID=rID).make_port_disconnect_callback(pnum)(callback=self.resume)
+                raise QueueParseException('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
+                
+            self.get_reactor_display(ID=rID).make_port_disconnect_callback(pnum)(callback=self.queue_resume)
             return
         
         elif action == 'PUMPFLOWSET':
@@ -207,8 +135,8 @@ class RobotQueue:
             # Make sure pump has been setup
             if self.get_reactor_display(ID=rID).tube_numbers[pnum].get() not in CFG['tubes']:
                 # Error
-                self.show_err('Error - step %d: Port %d not configured. Make sure to call PUMPSETUP first.' % (self.step, pnum))
-                raise QueueParseException
+                raise QueueParseException('Error - step %d: Port %d not configured. Make sure to call PUMPSETUP first.' % (self.step, pnum))
+                
 
             fv = arg3
             self.get_reactor_display(ID=rID).flow_rates[pnum].delete(0, END)
@@ -330,6 +258,7 @@ class RobotQueue:
             '''
             rID = int(arg1)
             err = self.get_reactor_display(ID=rID).jaw_btn.open_valve()
+            print err
             if err == 1:
                 # Error
                 raise QueueParseException
@@ -402,7 +331,7 @@ class RobotQueue:
             '''
             rID = int(arg1)
             if not self.get_reactor_display(ID=rID).connected:
-                self.get_reactor_display(ID=rID).on_connect_pressed(callback=self.resume)
+                self.get_reactor_display(ID=rID).on_connect_pressed(callback=self.queue_resume)
                 return 1
             else:
                 self.show_info('NOTE: Bluetooth already connected.')
@@ -528,10 +457,14 @@ class RobotQueue:
             '''
             t = int(arg1)
 
-            self.cnsl_print('Waiting %.3f seconds...' % (t/1000.))
-            self.master.after(t, self.resume)
+            # Only do timeouts in automatic mode
+            if not auto:
+                return 0
+
+            self.show_info('Waiting %.3f seconds...' % (t/1000.))
+            # self.master.after(t, self.queue_resume)
             # Display a counter on the screen
-            Counter(self.master, self.timer_label).start(t)
+            self.counter.start(t, self.queue_resume)
             return 1
 
         elif action == 'ECHO':
@@ -550,64 +483,51 @@ class RobotQueue:
             self.get_stack_window(x).pressure_set_entry.set(arg2)
             self.get_stack_window(x).on_back_pressure_set()
 
-
+        elif action == 'PAUSE':
+            '''
+            * Switches control to manual mode, meaning the user will have to continue the program through the user interface
+            * Arguments:
+                None
+            '''
+            self.set_control('manual')
+            return 0
 
 
         else:
-            self.show_err('Error - step %d: Action "%s" not recognized.' % (self.step, action))
-            raise QueueParseException
+            raise QueueParseException('Error - step %d: Action "%s" not recognized.' % (self.step, action))
+            
 
         return 0
 
+    def resume(self, action, msg, step):
 
+        if action == 'REACTORMOVE':
+            if msg == 1:
+                # Error
+                raise QueueParseException('Error - step %d: Robot couldn\'t complete move.' % step)
+            elif msg == 2:
+                # Internal error, which should already have been displayed on console
+                raise QueueParseException
 
-
-    # Callback used for operations that the program must wait for to finish.
-    def resume(self, msg=None):
-
-        try:
-
-            # Finish the last task
-            action = self.actions[-1]
-
-            if action == 'REACTORMOVE':
-                if msg == 1:
-                    # Error
-                    self.show_err('Error - step %d: Robot couldn\'t complete move.' % self.step)
-                    raise QueueParseException
-                elif msg == 2:
-                    # Internal error, which should already have been displayed on console
-                    raise QueueParseException
-
-            elif action == 'PUMPCONNECT' or action == 'PUMPDISCONNECT':
-                if msg == 1:
-                    # Error
-                    self.show_err('Error - step %d: Robot couldn\'t complete pipe move.' % self.step)
-                    raise QueueParseException
-                elif msg == 2:
-                    # Internal error, which should already have been displayed on console
-                    raise QueueParseException
-            elif action == 'BLECONNECT' or action == 'BLEDISCONNECT':
-                if msg > 0:
-                    # Error
-                    raise QueueParseException
-
-            # Continue queueing where we left off
-            self.process()
-
-        except QueueParseException:
-            self.show_err('Exiting Queue Mode')
-        except ValueError:
-            self.show_err('Error - step %d: Couldn\'t parse value.' % self.step)
-
+        elif action == 'PUMPCONNECT' or action == 'PUMPDISCONNECT':
+            if msg == 1:
+                # Error
+                raise QueueParseException('Error - step %d: Robot couldn\'t complete pipe move.' % step)
+            elif msg == 2:
+                # Internal error, which should already have been displayed on console
+                raise QueueParseException
+        elif action == 'BLECONNECT' or action == 'BLEDISCONNECT':
+            if msg > 0:
+                # Error
+                raise QueueParseException
 
 
     def get_stack_window(self, x):
         if x in self.stacks:
             return self.stacks[x]
         # Error
-        self.show_err('Error - step %d: Stack %d not found.' % (self.step, x))
-        raise QueueParseException
+        raise QueueParseException('Error - step %d: Stack %d not found.' % (self.step, x))
+        
 
 
 
@@ -616,14 +536,14 @@ class RobotQueue:
             if ID in self.reactors:
                 return self.get_reactor_display(*self.reactors[ID])
             # Error
-            self.show_err('Error - step %d: Location of reactor %d not known. Make sure to call REACTORSETUP first.' % (self.step, ID))
-            raise QueueParseException
+            raise QueueParseException('Error - step %d: Location of reactor %d not known. Make sure to call REACTORSETUP first.' % (self.step, ID))
+            
         if x in self.stacks:
             if y in self.stacks[x].reactors:
                 return self.stacks[x].reactors[y]
         # Error
-        self.show_err('Error - step %d: No such reactor position (%d,%d).' % (self.step, x, y))
-        raise QueueParseException
+        raise QueueParseException('Error - step %d: No such reactor position (%d,%d).' % (self.step, x, y))
+        
 
 
     def get_reactor_type_from_id(self, id_):
@@ -631,65 +551,10 @@ class RobotQueue:
             if  int(CFG['reactor types'][rt]['id']) == id_:
                 return rt
         # Error
-        self.show_err('Error - step %d: Reactor with ID %d not found.' % (self.step, id_))
-        raise QueueParseException
-
-
-class Counter:
-    def __init__(self, master, timer_label):
-        self.master = master
-        self.timer_label = timer_label
-
-        self.hrs = False
-        self.mins = False
-
-
-    def start(self, time_ms):
-        self.timeout = time_ms/1000.
-        if self.timeout >= 60:
-            self.mins = True
-        if self.timeout >= 3600:
-            self.hrs = True
-        if self.timeout < 1:
-            # No point counting
-            return
-
-        self.start_time = time.time()
-        self.master.after(1000, self.update)
-
-
-    def update(self):
-        time_elapsed = time.time() - self.start_time
-
-
-        if time_elapsed >= self.timeout:
-            # Done
-            self.timer_label['text'] = ''
-            return
-
-        time_left = self.timeout - time_elapsed + 1
-
-        # Update display
-        hours = int(time_left / 3600)
-        minutes = int(time_left / 60) % 60
-        seconds = int(time_left) % 60
-        if self.hrs:
-            self.timer_label['text'] = 'Time remaining: %d:%02d:%02d' % (hours, minutes, seconds)
-        elif self.mins:
-            self.timer_label['text'] = 'Time remaining: %02d:%02d' % (minutes, seconds)
-        else:
-            self.timer_label['text'] = 'Time remaining: %d seconds' % seconds
-
-
-
-        self.master.after(1000, self.update)
-
-
-
+        raise QueueParseException('Error - step %d: Reactor with ID %d not found.' % (self.step, id_))
+        
 
 
 class QueueParseException(Exception):
-    pass
-
-
-
+    def __init__(self, message=None):
+        self.message = message

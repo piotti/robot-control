@@ -2,7 +2,7 @@ from Tkinter import *
 import tkMessageBox as messagebox
 import tkFont
 
-from controller import Controller
+from test_controller import Controller
 
 from reactor import ReactorDisplay, ValveButton
 
@@ -15,7 +15,7 @@ import matplotlib.animation as animation
 import ttk
 from ttk import *
 
-from queue import RobotQueue
+from queueing.queue import RobotQueue
 
 class StackWindow:
     def __init__(self, master, idx, c, cnsl_print, graph):
@@ -129,7 +129,7 @@ class MainWindow:
         self.graph = Graph(tl2)
 
         # Make console
-        self.console = Text(tl1, height=8, bg='light grey', state = DISABLED)
+        self.console = Text(tl1, height=5, bg='light grey', state = DISABLED)
         self.console.grid(row=4, column=0, pady=10, sticky=E+N+S+W)
         sb = Scrollbar(tl1)
         sb.grid(row=4, column=1, sticky=N+S+W)

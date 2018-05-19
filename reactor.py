@@ -7,7 +7,7 @@ import tkMessageBox as messagebox
 
 from cfg import CFG
 
-from controller import *
+from test_controller import *
 
 import time
 
@@ -81,7 +81,7 @@ class ValveButton:
 		def cb():
 			if self.addr == -1:
 				# Valve not connected to port
-				self.cnsl('Error: Valve not connected to Festo port')
+				self.cnsl('Error: Valve not connected to Festo port', color='red')
 				return 1
 			self.cnsl('changing state of valve %d' % self.addr)
 			# Check state
@@ -502,7 +502,7 @@ class ReactorDisplay:
 		bay = (self.stack_idx, self.idx)
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
 		self.cnsl('Moving reactor %s from bay slot %s to storage lsot %s' % (reactor, str(bay), str(position)))
-		self.c.moveReactor(position, bay, -1, type=CFG['reactor types'][reactor]['type'], callback=callback)
+		self.c.moveReactor(position, bay, -1, reactorType=CFG['reactor types'][reactor]['type'], callback=callback)
 
 	def on_move_to_stack(self, callback=None):
 		reactor = self.reactor_type.get()
@@ -520,7 +520,7 @@ class ReactorDisplay:
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
 		bay = (self.stack_idx, self.idx)
 		self.cnsl('Moving reactor %s from storage slot %s to bay slot %s' % (reactor, str(position), str(bay)))
-		self.c.moveReactor(position, bay, 1, type=CFG['reactor types'][reactor]['type'], callback=callback)
+		self.c.moveReactor(position, bay, 1, reactorType=CFG['reactor types'][reactor]['type'], callback=callback)
 
 	def make_port_connect_callback(self, idx):
 		def cb(callback=None):

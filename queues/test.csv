@@ -6,6 +6,13 @@ Step,Action,Arg1,Arg2,Arg3
 # Move reactor to bay (0; 0). This line will block until the robot has completed the move.
 2,REACTORMOVE,1,TOBAY
 
+2,TIMEOUT,5000
+3,ECHO,hi
+4,ECHO,hey
+5,ECHO,hey1
+6,ECHO,hey2
+7,ECHO,hey3
+
 # Close the jaw to power up the reactor
 3,REACTORJAWCLOSE,1
 
@@ -17,6 +24,8 @@ Step,Action,Arg1,Arg2,Arg3
 
 # Start heating to 100 degrees C
 6,SETPOINT,1,100
+
+8,PAUSE
 
 # Wait 2 minutes (120000 ms)
 7,TIMEOUT,120000

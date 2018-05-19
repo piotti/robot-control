@@ -71,9 +71,14 @@ Step,Action,Arg1,Arg2,Arg3
         1. The text to be displayed on screen (make sure it doesn't contain any commas) 
 
 * `TIMEOUT`
-    * Pauses for specified time
+    * Pauses for specified time then continues
     * Arguments
         1. Timeout in milliseconds
+
+* `PAUSE`
+    * Switches control to manual mode, meaning the user will have to continue the program through the user interface
+    * Arguments:
+        None
 
 ### Setup
 * `REACTORSETUP`
