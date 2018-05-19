@@ -183,4 +183,4 @@ class Controller:
 def reactor_finish(cb):
     time.sleep(5)
     print 'done'
-    cb(0)
+    cb(1)

@@ -11,12 +11,13 @@ TIMEOUT_CALLS = ('TIMEOUT',)
 
 class QueueApi:
 
-    def __init__(self, stacks, show_info, counter, queue_resume, set_control):
+    def __init__(self, stacks, show_info, counter, queue_resume, set_control, settings):
         self.stacks = stacks
         self.show_info = show_info
         self.counter = counter
         self.queue_resume = queue_resume
         self.set_control = set_control
+        self.settings = settings
 
         self.reset()
 
@@ -31,7 +32,26 @@ class QueueApi:
         self.step = step
         self.action = action
 
-        if action == 'REACTORSETUP':
+        if action == 'ERRORHANDLE':
+            '''
+            * Sets how the program handles errors thrown by a certain command.
+            * Arguments
+                1. The command you want to handle errors for (e.g., `REACTORMOVE`)
+                2. What the program should do if the command fails. Must be either STOP or CONTINUE. By default, commands will stop the program after failing.
+                3. (Integer) Optional number of times to retry the command before stopping or continuing. Default is 0.
+            * Example usage: `1,ERRORHANDLE,PUMPCONNECT,STOP,2`
+            '''
+            command = arg1
+            cont = bool(('STOP', 'CONTINUE').index(arg2))
+            if arg3 == '':
+                retry = 0
+            else:
+                retry = int(arg3)
+
+            # Update the global queue settings
+            self.settings.set_command_error_handling(command, cont, retry)
+
+        elif action == 'REACTORSETUP':
             '''
             * Links the specified reactor to the specified reactor bay. This must be done before any
             BLE communication, or before moving a reactor to/from the bay

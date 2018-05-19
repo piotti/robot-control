@@ -5,6 +5,7 @@ import tkSimpleDialog
 
 from queue_api import QueueParseException, QueueApi, BLOCKING_CALLS, TIMEOUT_CALLS
 from queue_file import QueueFileManager
+from settings import QueueSettings
 
 import time
 
@@ -84,7 +85,11 @@ class RobotQueue:
 
         self.counter = Counter(self.master, self.timer_label)
 
-        self.api = QueueApi(self.stacks, self.show_info, self.counter, self.resume, self.set_control)
+        self.settings = QueueSettings()
+
+        self.api = QueueApi(self.stacks, self.show_info, self.counter, self.resume, self.set_control, self.settings)
+
+
 
 
     def on_auto(self):
@@ -234,27 +239,53 @@ class RobotQueue:
         self.step = 0
         self.actions = []
         self.stopped = False
+        self.retries = 0
 
         self.api.reset()
 
     def on_process_start(self):
         if not self.stopped:
-            return
+            self.on_stop()
         self.init_process()
         self.process()
 
 
     def process_queue_error(self):
-        # Go into manual mode
-        if not self.paused:
-            self.show_info('Switching to manual mode.')
-            self.on_manual()
 
         # Highlight error in console 
         self.qfm.error()
 
         # Stop executing
         self.executing = False
+
+        if self.paused:
+            return
+
+        command = self.actions[-1]
+        handling = self.settings.get_command_error_handling(command)
+        if handling['retry'] > self.retries:
+            # Try again
+            self.show_info('Attempting Retry %d out of %d retr%s...' % (self.retries+1, handling['retry'], 'y' if  handling['retry'] == 1 else 'ies'))
+            self.retries += 1
+            self.on_manual()
+            self.on_arrow_left()
+            self.on_auto()
+            return
+
+        else:
+            # Reset retry counter
+            self.retries = 0
+
+            if handling['continue']:
+                # Just keep going
+                self.show_info('Execution failed but continuing anyway (overrriden in queue file)')
+                self.process()
+            else:
+                # Go into manual mode
+                self.show_info('Switching to manual mode.')
+                self.on_manual()
+
+
 
     def handle_api_call(self, func, *args, **kwargs):
         try:
@@ -263,6 +294,10 @@ class RobotQueue:
         except QueueParseException as e:
             if e.message is not None:
                 self.show_err(e.message)
+            self.process_queue_error()
+            raise HandledProcessException
+        except ValueError:
+            self.show_err('Error - step %d: Couldn\'t parse value.' % self.step)
             self.process_queue_error()
             raise HandledProcessException
         except Exception:
@@ -276,7 +311,7 @@ class RobotQueue:
             return func(*args, **kwargs)
 
         except ValueError:
-            self.show_err('Error - step %d: Couldn\'t parse value.' % self.step)
+            self.show_err('Error - step %d: Couldn\'t parse line.' % self.step)
             self.process_queue_error()
             raise HandledProcessException
         except Exception:

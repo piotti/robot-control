@@ -59,7 +59,16 @@ Step,Action,Arg1,Arg2,Arg3
 12,REACTORMOVE,1,TOSTORAGE
 ```
 
+## Settings
+These commands globally affect the processing environment.
 
+* 'ERRORHANDLE'
+    * Sets how the program handles errors thrown by a certain command.
+    * Arguments
+        1. The command you want to handle errors for (e.g., `REACTORMOVE`)
+        2. What the program should do if the command fails. Must be either STOP or CONTINUE. By default, commands will stop the program after failing.
+        3. (Integer) Optional number of times to retry the command before stopping or continuing. Default is 0.
+    * Example usage: `1,ERRORHANDLE,PUMPCONNECT,STOP,2`
 
 ## Actions
 
