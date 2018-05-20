@@ -2,11 +2,14 @@ from Tkinter import *
 import tkMessageBox as messagebox
 import tkFont
 
-from test_controller import Controller
+from cfg import CFG
+
+if CFG['test'] in ('True', 'true'):
+    from test_controller import *
+else:
+    from controller import *
 
 from reactor import ReactorDisplay, ValveButton
-
-from cfg import CFG
 
 from graph import Graph, fig
 
@@ -43,8 +46,8 @@ class StackWindow:
         for i, e in enumerate(slots):
             # f = Frame(master)
             page = ttk.Frame(nb)
-            rd = ReactorDisplay(page, int(e), c, self.cnsl_print, idx, graph)
-            self.reactors[int(e)] = rd
+            rd = ReactorDisplay(page, i, int(e), c, self.cnsl_print, idx, graph)
+            self.reactors[i] = rd
             nb.add(page, text='Reactor ' + e + '\n')
         nb.grid(row=0, column=0, columnspan=2)
 

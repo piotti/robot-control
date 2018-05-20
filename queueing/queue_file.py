@@ -139,7 +139,18 @@ class QueueFileManager:
         if self.file_idx == 0:
             # nothing to be repeated (haven't started yet)
             return None
-        return self.parse_line(self.file_idx-1)
+        line =  self.parse_line(self.file_idx-1)
+
+        # Highlight line
+        if self.command in BLOCKING_CALLS:
+            if self.command in TIMEOUT_CALLS and not auto:
+                self.color_console_line(self.file_idx-1, COLOR_FINISHED)
+            else:
+                self.color_console_line(self.file_idx-1, COLOR_EXECUTING)
+        else:
+            self.color_console_line(self.file_idx-1, COLOR_FINISHED)
+
+        return line
 
     def color_console_line(self, line, color):
         self.console.tag_config('line %d' % (line+1), foreground=color)

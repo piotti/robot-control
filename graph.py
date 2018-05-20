@@ -15,6 +15,8 @@ import os
 
 from cfg import CFG
 
+import nidaq
+
 
 LARGE_FONT= ("Verdana", 12)
 style.use("ggplot")
@@ -24,7 +26,7 @@ a = fig.add_subplot(211)
 b = fig.add_subplot(212)
 
 
-START_TIME = None
+START_TIME = time.time()
 
 
 import random
@@ -115,9 +117,9 @@ class DataSet:
     def add(self, y, t=None):
         if t is None:
             t = time.time()
-        global START_TIME
-        if START_TIME is None:
-            START_TIME = t
+        # global START_TIME
+        # if START_TIME is None:
+        #     START_TIME = t
             # print 'setting start'
         # print time.time()-START_TIME
         self.ts.append(t-START_TIME)
@@ -147,6 +149,10 @@ def add_pressure_set(*args, **kwargs):
     ds = DataSet('P', *args, **kwargs)
     PRESSURE_SETS.append(ds)
     return ds
+
+
+nidaq_ps = []
+nidaq_ts = []
 
         
 
@@ -314,7 +320,24 @@ class Graph():
             yMin = min(yMin, ds.ymin)
         b.clear()
         b.plot(*series)
-        b.legend([self.reactor_names[ds.name] for ds in PRESSURE_SETS if self.p_vars[ds.name].get()])
+
+        leg = [self.reactor_names[ds.name] for ds in PRESSURE_SETS if self.p_vars[ds.name].get()]
+
+
+        if not CFG['test'] in ('True', 'true'):
+            press = nidaq.read_pressure()
+            nidaq_ts.append(time.time()-START_TIME)
+            nidaq_ps.append(press)
+            print press 
+            # PLOT IT
+            b.plot(nidaq_ts, nidaq_ps)
+            leg.append('System Pressure')
+
+
+
+        b.legend(leg)
+
+
         # b.legend([ds.name for ds in PRESSURE_SETS])
         b.set_xlabel('Time (s)')
         b.set_ylabel('Pressure (psi)')

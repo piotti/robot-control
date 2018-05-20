@@ -7,7 +7,11 @@ import tkMessageBox as messagebox
 
 from cfg import CFG
 
-from test_controller import *
+if CFG['test'] in ('True', 'true'):
+	from test_controller import *
+else:
+	from controller import *
+
 
 import time
 
@@ -30,7 +34,8 @@ class ValveButton:
 		
 
 		self.c = c
-		self.addr = int(addr)
+		self.festo = int(addr[0])
+		self.addr = int(addr[1])
 
 		if self.addr == -1:
 			kwargs['state'] = DISABLED
@@ -45,7 +50,8 @@ class ValveButton:
 		
 
 	def read(self):
-		self.open = self.c.valves.readValves()[self.addr]
+		# self.open = self.c.valves.readValves()[self.addr]
+		self.open = self.c.valves.readValve(self.festo, self.addr)
 		# import tkFont
 		# helv = tkFont.Font(family='Helvetica', size=14)
 		# style.configure('TButton', background='green')
@@ -87,12 +93,12 @@ class ValveButton:
 			# Check state
 			if self.open:
 				# Close
-				self.c.valves.closeValve(self.addr)
+				self.c.valves.closeValve(self.festo, self.addr)
 				time.sleep(.05)
 				self.read()
 			else:
 				# Open
-				self.c.valves.openValve(self.addr)
+				self.c.valves.openValve(self.festo, self.addr)
 				time.sleep(.05)
 				self.read()
 
@@ -132,9 +138,10 @@ class Button:
 
 class ReactorDisplay:
 
-	def __init__(self, master, idx, c, cnsl, stack_idx, graph):
+	def __init__(self, master, idx, name, c, cnsl, stack_idx, graph):
 		self.master = master
 		self.idx = idx
+		self.name = name
 		self.c = c
 		self.stack_idx = stack_idx
 		self.graph = graph
@@ -154,7 +161,7 @@ class ReactorDisplay:
 		f0 = Frame(master)
 		f0.grid(row=idx, column=0, padx=5, pady=1, sticky=N)
 		# "Reactor: Jaw 1"
-		self.jaw_btn = ValveButton(c, cnsl, CFG['slots'][str(idx)]['jaw'], f0,
+		self.jaw_btn = ValveButton(c, cnsl, CFG['slots'][str(name)]['jaw'], f0,
 				text='Reactor Jaw %d' % idx,
 				command=self.on_jaw_close,  width=15, height=6).pack(fill=BOTH)
 
@@ -224,7 +231,7 @@ class ReactorDisplay:
 			f = Frame(master)
 			f.grid(row=idx+1, column=2+i-3, padx=1, pady=1, sticky=N)
 			# 'Port 1'
-			state = NORMAL if int(CFG['slots'][str(idx)]['port %d' % i]) >= 0 else DISABLED
+			state = NORMAL if int(CFG['slots'][str(name)]['port %d' % i]) >= 0 else DISABLED
 			pf = Frame(f, borderwidth=2, relief='ridge')
 			pf.grid(row=0, column=0, columnspan=2, padx=1, pady=5)
 			Label(pf, text='Port %d' % i,  width=6).grid(
@@ -243,7 +250,7 @@ class ReactorDisplay:
 			OptionMenu(tf, self.tube_numbers[i], " ", *sorted(CFG['tubes'].keys()), command=self.make_tube_number_change_callback(i)).grid(
 					row=2, column=0, padx=1, pady=0, ipadx=20)
 			# 'Valve 1'
-			self.port_btns[i]['valve'] = ValveButton(c, cnsl, CFG['slots'][str(idx)]['valve %d' % i], f, text='Valve %d' % i,
+			self.port_btns[i]['valve'] = ValveButton(c, cnsl, CFG['slots'][str(name)]['valve %d' % i], f, text='Valve %d' % i,
 					 width=12, command=self.make_reactor_valve_callback(i)).grid(
 					row=3, rowspan=1, column=0, padx=1, pady=5)
 			# 'F Rate'
@@ -279,11 +286,11 @@ class ReactorDisplay:
 		f7.grid(row=0, column=0)
 		# f7.grid(row=idx, column=7-4, padx=1, pady=1, sticky=N)
 		# 'Outlet Valve'
-		self.outlet_btn = ValveButton(c, cnsl, CFG['slots'][str(idx)]['outlet'], f7, text='Outlet\nValve',
+		self.outlet_btn = ValveButton(c, cnsl, CFG['slots'][str(name)]['outlet'], f7, text='Outlet\nValve',
 				 width=8, height=3, command=self.on_outlet_valve_pressed).grid(
 				row=0, column=1, padx=1)
 		# 'Sep Valve'
-		self.sep_btn = ValveButton(c, cnsl, CFG['slots'][str(idx)]['sep'], f7, text='Sep\nValve',
+		self.sep_btn = ValveButton(c, cnsl, CFG['slots'][str(name)]['sep'], f7, text='Sep\nValve',
 				 width=8, height=3, command=self.on_sep_valve_pressed).grid(
 				row=1, column=1, padx=1)
 
@@ -343,7 +350,7 @@ class ReactorDisplay:
 		self.position['text'] = 'Storage Position:\n%s'% str(position)
 
 		# Update graphing display name
-		self.graph.set_reactor_name(self.idx, self.reactor_type.get())
+		self.graph.set_reactor_name(self.name, self.reactor_type.get())
 
 	def on_read_ble_id(self):
 		self.cnsl( 'on_read_ble_id')
@@ -460,7 +467,7 @@ class ReactorDisplay:
 				# Update graph
 				if self.temp_set is None:
 					print 'creating'
-					self.temp_set = add_temp_set(self.idx)
+					self.temp_set = add_temp_set(self.name)
 					print 'done creating'
 				self.temp_set.add(value)
 				print 'added'
@@ -468,7 +475,7 @@ class ReactorDisplay:
 				self.pressure['text'] = 'Press: %d psi' % value
 				# Update graph
 				if self.pressure_set is None:
-					self.pressure_set = add_pressure_set(self.idx)
+					self.pressure_set = add_pressure_set(self.name)
 				self.pressure_set.add(value)
 
 		return cb
@@ -532,11 +539,11 @@ class ReactorDisplay:
 					callback(2)
 				return
 			port = idx
-			tower_num = CFG['slots'][str(self.idx)]["port %d" % port]
+			tower_num = CFG['slots'][str(self.name)]["port %d" % port]
 			if tower_num < 0:
 				self.cnsl('Error: this port doesn\'t exist')
 				return
-			bay = self.idx - 1
+			bay = self.idx
 			self.cnsl('Connecting tube %s to port %d of bay slot %d' % (tube, port, bay))
 			self.c.movePipe(tower_num, int(tube), -1, callback=callback)
 		return cb
@@ -552,11 +559,11 @@ class ReactorDisplay:
 				return
 				
 			port = idx
-			tower_num = CFG['slots'][str(self.idx)]["port %d" % port]
+			tower_num = CFG['slots'][str(self.name)]["port %d" % port]
 			if tower_num < 0:
 				self.cnsl('Error: this port doesn\'t exist')
 				return
-			bay = self.idx - 1
+			bay = self.idx
 			self.cnsl('Disconnecting tube %s from port %d of bay slot %d' % (tube, port, bay))
 			self.c.movePipe(tower_num, int(tube), 1, callback=callback)
 		return cb

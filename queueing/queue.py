@@ -14,10 +14,10 @@ import traceback
 SYMBOLS = {
     'play': u'\u2941',
     'pause': u'\u270b',
-    'step': u'\u23ED',
+    'step': u'\u23E9',#u'\u23ED',
     'redo': u'\u21BA',
     'stop': u'\u25A0',
-    'clock': u'\u23f2',
+    'clock': u'\u23F0',#u'\u23f2',
     'arrowleft': u'\u00AB',
     'arrowright': u'\u00BB',
 
@@ -71,7 +71,7 @@ class RobotQueue:
         self.start_btn.grid(row=1, column=0, sticky=E+W)
 
         # Spacer at bottom
-        Label(master).grid(row=2, column=0)
+        # Label(master).grid(row=3, column=0)
 
         # Add timer
         self.timer_label = Label(self.master, text='', foreground='blue',  font=("TkDefaultFont", 12))

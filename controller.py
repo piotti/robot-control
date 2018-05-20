@@ -53,7 +53,8 @@ class Controller:
 			pcb(msg)
 
 	def valve_connect(self):
-		self.valves = ValveController(host=CFG["festo_ip"])
+		hosts = CFG["festo 1 ip"],# CFG["festo 2 ip"]valves, CFG["festo 3 ip"]
+		self.valves = ValveController(hosts)
 
 	def valve_disconnect(self):
 		if self.valves is not None:
@@ -64,6 +65,9 @@ class Controller:
 
 	def ble_disconnect(self):
 		pass
+
+	def read_pressure():
+		return nidaq.read_pressure()
 
 	# Calls all the callbacks added to the callback list
 	def pump_callback(self, msg):

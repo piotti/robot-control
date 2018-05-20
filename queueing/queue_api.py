@@ -499,7 +499,8 @@ class QueueApi:
             '''
             x = int(arg1)
             pressure = arg2
-            self.get_stack_window(x).pressure_set_entry.set(arg2)
+            self.get_stack_window(x).pressure_set_entry.delete(0, END)
+            self.get_stack_window(x).pressure_set_entry.insert(0, arg2)
             self.get_stack_window(x).on_back_pressure_set()
 
         elif action == 'PAUSE':
