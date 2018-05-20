@@ -78,12 +78,10 @@ These commands globally affect the processing environment.
     * Echoes the given text to the console
     * Arguments
         1. The text to be displayed on screen (make sure it doesn't contain any commas) 
-
 * `TIMEOUT`
     * Pauses for specified time then continues
     * Arguments
         1. Timeout in milliseconds
-
 * `PAUSE`
     * Switches control to manual mode, meaning the user will have to continue the program through the user interface
     * Arguments:
