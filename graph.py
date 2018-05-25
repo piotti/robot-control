@@ -328,7 +328,6 @@ class Graph():
             press = nidaq.read_pressure()
             nidaq_ts.append(time.time()-START_TIME)
             nidaq_ps.append(press)
-            print press 
             # PLOT IT
             b.plot(nidaq_ts, nidaq_ps)
             leg.append('System Pressure')
