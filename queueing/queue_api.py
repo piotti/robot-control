@@ -76,18 +76,20 @@ class QueueApi:
             * Arguments
                 1. Reactor ID
                 2. Port number (1, 2, 3, or 4)
-                3. Tube number, correlating to a pump (see config file)
+                3. Tube coords, correlating to a pump (see config file), in format `x y`
             '''
             rID = int(arg1)
             pnum = int(arg2)
             if pnum not in (1,2,3,4):
                 raise QueueParseException('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
-                
-            tnum = arg3
-            if tnum not in CFG['tubes']:
-                raise QueueParseException('Error - step %d: Tube "%s" not found.' % (self.step, tnum))
+            
+            tube = arg3
+            tube_x, tube_y = tuple(int(e) for e in tube.split(' '))
+            tube_formatted = '%d,%d' % (tube_x, tube_y)
+            if tube_formatted not in CFG['tubes']:
+                raise QueueParseException('Error - step %d: Tube "%s" not found.' % (self.step, tube))
                  
-            self.get_reactor_display(ID=rID).make_tube_number_change_callback(pnum)(tnum)
+            self.get_reactor_display(ID=rID).make_tube_number_change_callback(pnum)(tube_formatted)
 
         elif action == 'REACTORMOVE':
             '''

@@ -15,7 +15,8 @@ import os
 
 from cfg import CFG
 
-import nidaq
+if not CFG['test'] in ('True', 'true'):
+    import nidaq
 
 
 LARGE_FONT= ("Verdana", 12)

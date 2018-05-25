@@ -124,9 +124,6 @@ class Controller:
 
 		print 'moving pipe'
 		print nearNum, farNum, direction
-		nearNum = int(nearNum)
-		nfarum = int(farNum)
-		direction = int(direction)
 
 		# Start motors
 		nidaq.start()

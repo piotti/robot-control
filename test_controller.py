@@ -46,8 +46,8 @@ class ValveController:
     def closeValve(self, _):
         pass
 
-    def readValves(self):
-        return [0]*16
+    def readValve(self, a, b):
+        return 0
 
 class PressureController:
     def __init__(self, callback, ip='192.168.1.12', port=4002):
@@ -174,7 +174,7 @@ class Controller:
         threading.Thread(target=reactor_finish, args=(callback,)).start()
         print storeNum, bayNum, direction, reactorType, between_stores, between_bays, verbose
 
-    def movePipe(nearNum, farNum, direction, xDisp = .05, yDisp = .03, callback=lambda x: None):
+    def movePipe(self, nearNum, farNum, direction, xDisp = .05, yDisp = .03, callback=lambda x: None):
         print 'moving pipe'
         print nearNum, farNum, direction, xDisp, yDisp
         threading.Thread(target=reactor_finish, args=(callback,)).start()

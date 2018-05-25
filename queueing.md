@@ -98,7 +98,7 @@ These commands globally affect the processing environment.
     * Arguments
         1. Reactor ID
         2. Port number (1, 2, 3, or 4)
-        3. Tube number, correlating to a pump (see config file)
+        3. Tube coords, correlating to a pump (see config file), in format `x y`
 * 'PRESSURESET'
     * Sets the Back Pressure of the stack
         * Arguments

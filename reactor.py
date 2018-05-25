@@ -231,7 +231,7 @@ class ReactorDisplay:
 			f = Frame(master)
 			f.grid(row=idx+1, column=2+i-3, padx=1, pady=1, sticky=N)
 			# 'Port 1'
-			state = NORMAL if int(CFG['slots'][str(name)]['port %d' % i]) >= 0 else DISABLED
+			state = NORMAL if int(CFG['slots'][str(name)]['port %d' % i][1]) >= 0 else DISABLED
 			pf = Frame(f, borderwidth=2, relief='ridge')
 			pf.grid(row=0, column=0, columnspan=2, padx=1, pady=5)
 			Label(pf, text='Port %d' % i,  width=6).grid(
@@ -538,14 +538,17 @@ class ReactorDisplay:
 				if callback is not None:
 					callback(2)
 				return
+			# parse tube tuple
+			tube = tuple(int(e) for e in tube.split(','))
 			port = idx
-			tower_num = CFG['slots'][str(self.name)]["port %d" % port]
-			if tower_num < 0:
+			tower_num_cfg = CFG['slots'][str(self.name)]["port %d" % port]
+			tower_num = int(tower_num_cfg[0]), int(tower_num_cfg[1])
+			if tower_num[1] < 0:
 				self.cnsl('Error: this port doesn\'t exist')
 				return
 			bay = self.idx
 			self.cnsl('Connecting tube %s to port %d of bay slot %d' % (tube, port, bay))
-			self.c.movePipe(tower_num, int(tube), -1, callback=callback)
+			self.c.movePipe(tower_num, tube, -1, callback=callback)
 		return cb
 
 	def make_port_disconnect_callback(self, idx):
@@ -557,15 +560,17 @@ class ReactorDisplay:
 				if callback is not None:
 					callback(2) 
 				return
-				
+			# parse tube tuple
+			tube = tuple(int(e) for e in tube.split(','))
 			port = idx
-			tower_num = CFG['slots'][str(self.name)]["port %d" % port]
+			tower_num_cfg = CFG['slots'][str(self.name)]["port %d" % port]
+			tower_num = int(tower_num_cfg[0]), int(tower_num_cfg[1])
 			if tower_num < 0:
 				self.cnsl('Error: this port doesn\'t exist')
 				return
 			bay = self.idx
 			self.cnsl('Disconnecting tube %s from port %d of bay slot %d' % (tube, port, bay))
-			self.c.movePipe(tower_num, int(tube), 1, callback=callback)
+			self.c.movePipe(tower_num, tube, 1, callback=callback)
 		return cb
 
 
