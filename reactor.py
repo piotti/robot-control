@@ -377,7 +377,7 @@ class ReactorDisplay:
 			fr = self.flow_rates[idx].get()
 			self.cnsl( fr)
 			try:
-				fr = int(fr)
+				fr = float(fr)
 			except ValueError:
 				self.cnsl( 'couldnt parse FR')
 				return 1

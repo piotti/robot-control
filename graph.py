@@ -135,6 +135,8 @@ class DataSet:
         if len(self.ts) > 1000:
             self.ts.pop(0)
             self.ys.pop(0)
+            self.nidaq_ts.pop(0)
+            self.nidaq_ps.POP(0)
 
     def __repr__(self):
         return str((self.ts, self.ys))
@@ -316,7 +318,7 @@ class Graph():
                 continue
             series.append(ds.ts + [time.time()-START_TIME])
             series.append(ds.ys + [ds.ys[-1]])
-            tMax = max(ds.ts[-1], tMax) if ds.ts else 0
+#            tMax = max(ds.ts[-1], tMax) if ds.ts else 0
             yMax = max(yMax, ds.ymax)
             yMin = min(yMin, ds.ymin)
         b.clear()
@@ -329,6 +331,7 @@ class Graph():
             press = nidaq.read_pressure()
             nidaq_ts.append(time.time()-START_TIME)
             nidaq_ps.append(press)
+            tMax = max(nidaq_ts[-1], tMax)
             # PLOT IT
             b.plot(nidaq_ts, nidaq_ps)
             leg.append('System Pressure')
