@@ -136,7 +136,7 @@ class DataSet:
             self.ts.pop(0)
             self.ys.pop(0)
             self.nidaq_ts.pop(0)
-            self.nidaq_ps.POP(0)
+            self.nidaq_ps.pop(0)
 
     def __repr__(self):
         return str((self.ts, self.ys))
