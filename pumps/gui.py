@@ -3,6 +3,7 @@ from sock import PumpController
 from Tkinter import *
 import time
 import json
+from ..threadsafeconsole import ThreadSafeConsole
 
 class GUI:
 
@@ -72,7 +73,7 @@ class GUI:
 		Label(master, text='').grid(row=0, column=10, padx=20)
 
 		#Make console window
-		self.console = Text(master, height=4, width=30, bg='light grey')#, state=DISABLED)
+		self.console = ThreadSafeConsole(master, height=4, width=30, bg='light grey')#, state=DISABLED)
 		self.console.grid(row=8, column=5, columnspan=4)
 
 		#Connect to pump controller
@@ -80,8 +81,9 @@ class GUI:
 
 
 	def printToConsole(self, msg):
-		self.console.insert(END, msg)
-		self.console.see(END)
+		# self.console.insert(END, msg)
+		# self.console.see(END)
+		self.console.write(msg)
 
 	#Display version of each pump listed on screen
 	def echoPumps(self):

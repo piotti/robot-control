@@ -18,7 +18,10 @@ import matplotlib.animation as animation
 import ttk
 from ttk import *
 
+import sys
+
 from queueing.queue import RobotQueue
+from threadsafeconsole import ThreadSafeConsole
 
 class StackWindow:
     def __init__(self, master, idx, c, cnsl_print, graph):
@@ -132,7 +135,7 @@ class MainWindow:
         self.graph = Graph(tl2)
 
         # Make console
-        self.console = Text(tl1, height=5, bg='light grey', state = DISABLED)
+        self.console = ThreadSafeConsole(tl1, height=5, bg='light grey', state = DISABLED)
         self.console.grid(row=4, column=0, pady=10, sticky=E+N+S+W)
         sb = Scrollbar(tl1)
         sb.grid(row=4, column=1, sticky=N+S+W)
@@ -175,21 +178,29 @@ class MainWindow:
     def print_to_console(self, msg, color=None):
 
 
-        start = self.console.index("end-1c")
+        # start = self.console.index("end-1c")
 
 
-        self.console.config(state=NORMAL)
-        self.console.insert(END,str(msg)+'\n')
-        self.console.config(state=DISABLED)
-        self.console.see(END)
+        #self.console.config(state=NORMAL)
+        #self.console.insert(END,str(msg)+'\n')
+        try:
+            self.console.write(str(msg) + '\n')
+            sys.stdout.write('wrote!\n')
+            sys.stdout.flush()
+        except Exception as e:
+            sys.stdout.write(e)
+            sys.stdout.flush()
+
+        #self.console.config(state=DISABLED)
+        # #self.console.see(END)
 
         
-        end = self.console.index("end-2c")
+        # end = self.console.index("end-2c")
 
-        if color is not None:
-            self.console.tag_add(str(MainWindow.console_tag_idx), start, end)
-            self.console.tag_config(str(MainWindow.console_tag_idx), foreground=color)
-            MainWindow.console_tag_idx += 1        
+        # if color is not None:
+        #     self.console.tag_add(str(MainWindow.console_tag_idx), start, end)
+        #     self.console.tag_config(str(MainWindow.console_tag_idx), foreground=color)
+        #     MainWindow.console_tag_idx += 1        
 
 
 
