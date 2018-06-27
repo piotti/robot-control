@@ -91,10 +91,13 @@ class FileWriter:
         # Write queued data to file
         if self.data_queue:
             # open file
-            file = open(self.fpath+'.txt', 'w')
+            file = open(self.fpath+'.txt', 'a')
             for line in self.data_queue:
                 file.write('%s %s %.3f %.2f\n' % line)
             file.close()
+
+            # clear queue
+            self.data_queue = []
 
 
 fw = FileWriter()
