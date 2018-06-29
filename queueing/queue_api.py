@@ -141,7 +141,7 @@ class QueueApi:
                 raise QueueParseException('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
                 
             self.get_reactor_display(ID=rID).make_port_disconnect_callback(pnum)(callback=self.queue_resume)
-            return
+            return 1
         
         elif action == 'PUMPFLOWSET':
             '''
