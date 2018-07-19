@@ -25,11 +25,12 @@ SYMBOLS = {
 
 class RobotQueue:
 
-    def __init__(self, master, cnsl_print, stacks):
+    def __init__(self, master, cnsl_print, stacks, rheodyne_valves):
         self.master = master
         self.file_chosen = False
         self.cnsl_print = cnsl_print
         self.stacks = stacks
+        self.rheodyne_valves = rheodyne_valves # CC
 
         # Make Display
         Label(master, text="Queuing Control", anchor=CENTER, font=("TkDefaultFont", 12)).grid(row=0, column=0, columnspan=2, sticky=E+W)
@@ -87,7 +88,7 @@ class RobotQueue:
 
         self.settings = QueueSettings()
 
-        self.api = QueueApi(self.stacks, self.show_info, self.counter, self.resume, self.set_control, self.settings)
+        self.api = QueueApi(self.stacks, self.rheodyne_valves, self.show_info, self.counter, self.resume, self.set_control, self.settings)
 
 
 
@@ -207,8 +208,6 @@ class RobotQueue:
 
         # Step backwards without executing
         self.qfm.seek(1)
-
-
 
     def set_control(self, control):
         if control == 'manual':

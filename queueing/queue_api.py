@@ -11,8 +11,9 @@ TIMEOUT_CALLS = ('TIMEOUT',)
 
 class QueueApi:
 
-    def __init__(self, stacks, show_info, counter, queue_resume, set_control, settings):
+    def __init__(self, stacks, rheodyne_valves, show_info, counter, queue_resume, set_control, settings):
         self.stacks = stacks
+        self.rheodyne_valves = rheodyne_valves # CC
         self.show_info = show_info
         self.counter = counter
         self.queue_resume = queue_resume
@@ -141,7 +142,7 @@ class QueueApi:
                 raise QueueParseException('Error - step %d: Port number must be integer between 1 and 4.' % self.step)
                 
             self.get_reactor_display(ID=rID).make_port_disconnect_callback(pnum)(callback=self.queue_resume)
-            return
+            return 1
         
         elif action == 'PUMPFLOWSET':
             '''
@@ -417,7 +418,7 @@ class QueueApi:
                 1. Reactor ID
                 2. Setpoint, integer between 0 and 255
             '''
-            rID = int(arg1)
+            rID = float(arg1)
             sp = arg2
             self.get_reactor_display(ID=rID).sp_temp.delete(0, END)
             self.get_reactor_display(ID=rID).sp_temp.insert(0, sp)
@@ -514,6 +515,36 @@ class QueueApi:
             self.set_control('manual')
             return 0
 
+        elif action == 'WASHVALVESON':
+            '''
+            * Sets the wash valves to there on position
+            * Arguments:
+                None
+            '''
+            self.get_stack_window(0).wash_set_on()
+
+        elif action == 'WASHVALVESOFF':
+            '''
+            * Sets wash valves to there off position
+            * Arguments:
+                None
+            '''
+            self.get_stack_window(0).wash_set_off()
+
+
+        elif action == 'REAGENTPORT':
+            '''
+            * Changes a rheodyne selector valve
+            * Arguments:
+                None
+            '''
+            try:
+                valve_num = int(arg1) # 1-indexed
+                port_num = int(arg2)
+                self.rheodyne_valves[valve_num-1].selector(port_num)
+            except Exception as e:
+                print(e)
+                raise QueueParseException('Error - step %d: Could not set reagent selector valve %s to %s (%d valves configured): %s' % (step, arg1, arg2, len(self.rheodyne_valves), str(e)))
 
         else:
             raise QueueParseException('Error - step %d: Action "%s" not recognized.' % (self.step, action))

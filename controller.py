@@ -4,8 +4,11 @@ from ble.client import ble_decode as bled
 from pumps.pump_controller import PumpController
 from pressure.alicat import PressureController 
 from valves.modbus import ValveController
+from valves.rheodyne import RheodyneValveController
+# from valves.rheodyne import ReagentController
 
 import nidaq
+
 
 from cfg import CFG
 
@@ -38,6 +41,9 @@ class Controller:
 		self.ble = None
 		self.valves = None
 		self.pressure = None
+		self.reagents = None
+
+		self.rheodyne_valves = [] # CC
 
 
 	def pressure_connect(self):
@@ -66,8 +72,20 @@ class Controller:
 	def ble_disconnect(self):
 		pass
 
-	def read_pressure():
+	def read_pressure(self):
 		return nidaq.read_pressure()
+
+	def wash_valve_on(self):
+		nidaq.valve_on()
+
+	def wash_valve_off(self):
+		nidaq.valve_off()
+
+		return 
+	def reagent_selector(self, address, port_number):
+		port_num = int(port_number)
+#		self.reagents = ReagentController(address, port_num)
+		return 
 
 	# Calls all the callbacks added to the callback list
 	def pump_callback(self, msg):
@@ -87,6 +105,26 @@ class Controller:
 
 	def add_pressure_callback(self, cb):
 		self.pressure_cbs.append(cb)
+
+	# Rheodyne valve stuff (CC)
+	def rheodyne_valves_connect(self):
+		i = 1
+		while True:
+			if 'rheodyne valve {} ip'.format(i) in CFG:
+				print('Connecting to rheodyne valve # {}'.format(i))
+				self.rheodyne_valves.append(
+					RheodyneValveController(
+						ip=CFG['rheodyne valve {} ip'.format(i)],
+						port=int(CFG['rheodyne valve {} port'.format(i)]),
+					)
+				)
+			else:
+				break
+			i += 1
+
+	def rheodyne_valves_disconnect(self):
+		for valve in self.rheodyne_valves:
+			valve.stop()
 
 	## ROBOT FUNCTIONS ##
 	def moveReactor(self, storeNum, bayNum, direction, reactorType = 'normal', between_stores = False,

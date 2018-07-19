@@ -506,7 +506,7 @@ class ReactorDisplay:
 
 		position = (int(CFG['reactor types'][reactor]['storage x']), int(CFG['reactor types'][reactor]['storage y']))
 		# bay = self.idx - 1
-		bay = (self.stack_idx, self.idx)
+		bay = (int(self.stack_idx), int(self.idx))
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
 		self.cnsl('Moving reactor %s from bay slot %s to storage lsot %s' % (reactor, str(bay), str(position)))
 		self.c.moveReactor(position, bay, -1, reactorType=CFG['reactor types'][reactor]['type'], callback=callback)
@@ -525,7 +525,7 @@ class ReactorDisplay:
 		position = (int(CFG['reactor types'][reactor]['storage x']), int(CFG['reactor types'][reactor]['storage y']))
 		# bay = self.idx - 1
 		# bay = (CFG['stacks']['stack %d' % self.stack_idx]['x pos'], CFG['slots'][str(self.idx)]['y pos'])
-		bay = (self.stack_idx, self.idx)
+		bay = (int(self.stack_idx), int(self.idx))
 		self.cnsl('Moving reactor %s from storage slot %s to bay slot %s' % (reactor, str(position), str(bay)))
 		self.c.moveReactor(position, bay, 1, reactorType=CFG['reactor types'][reactor]['type'], callback=callback)
 
@@ -565,7 +565,7 @@ class ReactorDisplay:
 			port = idx
 			tower_num_cfg = CFG['slots'][str(self.name)]["port %d" % port]
 			tower_num = int(tower_num_cfg[0]), int(tower_num_cfg[1])
-			if tower_num < 0:
+			if tower_num[1] < 0:
 				self.cnsl('Error: this port doesn\'t exist')
 				return
 			bay = self.idx

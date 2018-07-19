@@ -74,8 +74,31 @@ class StackWindow:
         self.pressure_set_entry = Entry(pframe, width=12)
         self.pressure_set_entry.grid(row=1, column=1, sticky=W)
         Button(pframe, text='Set', command=self.on_back_pressure_set).grid(row=1, column=2, sticky=W)
-        # Add pressure callback
+        # Add Wash Valve
         self.c.add_pressure_callback(self.on_pressure_msg)
+
+        # Reagent selectors (rheodyne)
+        num_selector_valves = len(self.c.rheodyne_valves)
+        pframe.grid(row=4, column=0)
+        Label(pframe, text='Reagent Selector: {} valves installed'.format(num_selector_valves)).grid(row=2, column=0, sticky=W)
+        self.valve_num_label = Label(pframe, text='')
+        self.valve_num_label.grid(row=2, column=1, sticky=W)
+        Label(pframe, text='Valve Num:').grid(row=3, column=0, sticky=W)
+        self.valve_num_set_entry = Entry(pframe, width=12)
+        self.valve_num_set_entry.grid(row=3, column=1, sticky=W)
+
+        self.port_num_label = Label(pframe, text='')
+        self.port_num_label.grid(row=2, column=3, sticky=W)
+        Label(pframe, text='Port Number:').grid(row=3, column=3, sticky=W)
+        self.port_num_set_entry = Entry(pframe, width=12)
+        self.port_num_set_entry.grid(row=3, column=4, sticky=W)
+        Button(pframe, text='Set', command=self.reagent_selector_set).grid(row=3, column=5, sticky=W)
+
+        pframe.grid(row=4, column=0)
+        Label(pframe, text='Wash Valves: ').grid(row=4, column=0, sticky=W)
+        
+        Button(pframe, text='Wash Ports On', command=self.wash_set_on).grid(row=5, column=0, sticky=W)
+        Button(pframe, text='Wash Ports Off', command=self.wash_set_off).grid(row=5, column=2, sticky=W)
 
 
     def on_pressure_msg(self, msg):
@@ -94,6 +117,27 @@ class StackWindow:
         # TESTING: setting colors
         # self.cnsl_print("hello \n world", color=self.pressure_set_entry.get())
 
+    def wash_set_on(self):
+        self.c.wash_valve_on()
+
+    def wash_set_off(self):
+        self.c.wash_valve_off()
+
+    def reagent_selector_set(self): # CC
+        print 'selector executed'
+
+        try:
+            valve_num = int(self.valve_num_set_entry.get())
+            port_num = int(self.port_num_set_entry.get())
+            self.c.rheodyne_valves[valve_num-1].selector(port_num)
+            self.cnsl_print('Tried to set rheodyne valve {} to position {}'.format(valve_num, port_num))
+        except Exception as e:
+            print(e)
+            self.cnsl_print('Could not set valve position? {} and {}'.format(
+                self.valve_num_set_entry.get(),
+                self.port_num_set_entry.get(),
+            ))
+
    
 class MainWindow:
 
@@ -107,6 +151,7 @@ class MainWindow:
         # self.graph = Graph(master)
 
         self.stacks = {}
+        self.rheodyne_valves = {} # CC
 
         self.start()
 
@@ -119,6 +164,8 @@ class MainWindow:
         c.pumps_connect()
         c.ble_connect()
         c.pressure_connect()
+        c.rheodyne_valves_connect()
+
         self.c = c
 
         # tl1 = Toplevel(self.master)
@@ -169,7 +216,7 @@ class MainWindow:
 
         # Display queueing options
         tl3 = Frame(self.master)
-        self.robot_queue = RobotQueue(tl3, self.print_to_console, self.stacks)
+        self.robot_queue = RobotQueue(tl3, self.print_to_console, self.stacks, self.c.rheodyne_valves)
         tl3.grid(row=1, column=0, sticky=N+E+W)
 
 
@@ -209,6 +256,7 @@ class MainWindow:
         self.c.valve_disconnect()
         self.c.pumps_disconnect()
         self.c.pressure_disconnect()
+        self.c.rheodyne_valves_disconnect()
 
         self.master.destroy()
         exit()
