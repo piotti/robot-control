@@ -41,7 +41,6 @@ def addNewPoint():
 class FileWriter:
     def __init__(self):
         self.started = False
-
         self.data_queue = []
 
 
@@ -113,9 +112,11 @@ class DataSet:
         # self.num = name[8:]
         self.ts = []
         self.ys = []
+        self.nidaq_ts = []
 
         self.ymax = 0
         self.ymin = 0
+
 
 
     def add(self, y, t=None):
@@ -138,8 +139,8 @@ class DataSet:
         if len(self.ts) > 1000:
             self.ts.pop(0)
             self.ys.pop(0)
-            self.nidaq_ts.pop(0)
-            self.nidaq_ps.pop(0)
+#            self.nidaq_ts.pop(0)
+#            self.nidaq_ps.pop(0)
 
     def __repr__(self):
         return str((self.ts, self.ys))
@@ -151,14 +152,17 @@ def add_temp_set(*args, **kwargs):
     ds = DataSet('T', *args, **kwargs)
     TEMP_SETS.append(ds)
     return ds
+
 def add_pressure_set(*args, **kwargs):
     ds = DataSet('P', *args, **kwargs)
     PRESSURE_SETS.append(ds)
     return ds
 
+#def add_NIPRESSURE_set(*arg, **kwargs):
+#    ds = Dataset('System Pressure', *args, **kargs)
+#    nidaq_ps.append(ds)
+#    return ds
 
-nidaq_ps = []
-nidaq_ts = []
 
         
 
@@ -183,7 +187,7 @@ class Graph():
         self.a_xlim = (0,120)
         self.a_ylim = (0,300)
         self.b_xlim = (0,120)
-        self.b_ylim = (0,200)
+        self.b_ylim = (-50,300)
 
         self.reactors = [int(e) for e in sorted(CFG['slots'].keys())]
         self.reactor_names = {e:'Reactor '+str(e) for e in self.reactors}
@@ -191,6 +195,9 @@ class Graph():
         self.t_vars = {}
         self.p_checks = {}
         self.t_checks = {}
+
+        self.nidaq_ps = []
+        self.nidaq_ts = []
 
         frame = Frame(master)
         
@@ -272,8 +279,7 @@ class Graph():
             yMax = max(yMax, ds.ymax)
             yMin = min(yMin, ds.ymin)
             # Add placeholder data point at end to make line go all the way to current time
-
-
+        
         a.clear()
         a.plot(*series)
 
@@ -309,6 +315,7 @@ class Graph():
 
 
         ### Configure Pressure Subplot ###
+
         series = []
         tMax = 0
         yMax = 0
@@ -330,14 +337,20 @@ class Graph():
         leg = [self.reactor_names[ds.name] for ds in PRESSURE_SETS if self.p_vars[ds.name].get()]
 
 
+
         if not CFG['test'] in ('True', 'true'):
             press = nidaq.read_pressure()
-            nidaq_ts.append(time.time()-START_TIME)
-            nidaq_ps.append(press)
-            tMax = max(nidaq_ts[-1], tMax)
+            self.nidaq_ts.append(time.time()-START_TIME)
+            self.nidaq_ps.append(press)
+            tMax = max(self.nidaq_ts[-1], tMax)
             # PLOT IT
-            b.plot(nidaq_ts, nidaq_ps)
+            b.plot(self.nidaq_ts, self.nidaq_ps)
             leg.append('System Pressure')
+                    # If dataset more than 1000 points long, delete off end
+            if len(self.nidaq_ts) > 1000:
+                self.nidaq_ts.pop(0)
+                self.nidaq_ps.pop(0)
+
 
 
 
@@ -363,7 +376,7 @@ class Graph():
             # print 'setting ylim to ', ylim
              # Set vertical scaling
             if self.live_scroll.get():
-                self.b_ylim = (0,200)#(min(yMin, self.b_ylim[0]), max(yMax, self.b_ylim[1]))
+                self.b_ylim = (-50,300)#(min(yMin, self.b_ylim[0]), max(yMax, self.b_ylim[1]))
             b.set_ylim(self.b_ylim)
         else:
             lim = b.get_ylim()
@@ -381,5 +394,5 @@ if __name__=='__main__':
     add_pressure_set('Two')
     
 
-    ani = animation.FuncAnimation(fig, app.animate, interval=1000)
+    ani = animation.FuncAnimation(fig, app.animate, interval=1100)
     root.mainloop()

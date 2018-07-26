@@ -223,7 +223,7 @@ class RobotQueue:
 
 
     def on_open_queue(self):
-        self.fname = tkFileDialog.askopenfilename(initialdir = "queues/",title = "Select Queue",filetypes = (("CSV files","*.csv"),("all files","*.*")))
+        self.fname = tkFileDialog.askopenfilename(initialdir = "C:\Users\ROB\Dropbox\Robotic_Toolbox\RECIPES",title = "Select Queue",filetypes = (("CSV files","*.csv"),("all files","*.*")))
         display_name = self.fname.split('/')[-1]
         if len(display_name) > 20:
             display_name=display_name[:17] + '...'

@@ -4,6 +4,8 @@ import logging
 import logging.handlers
 import sys
 
+logging.basicConfig(level=logging.INFO, filename='logs.txt')
+
 from bgapi.module import BlueGigaModule, GATTCharacteristic, GATTService, BlueGigaClient, BlueGigaServer, BLEConnection
 from bgapi.cmd_def import gap_discoverable_mode, gap_connectable_mode
 
@@ -57,7 +59,7 @@ class Target:
 
 class Dongle(BlueGigaClient):
     def __init__(self, port):
-        super(Dongle, self).__init__(port=port, baud=115200, timeout=0.1)
+        super(Dongle, self).__init__(port=port, baud=115200, timeout=0.25)
         self.port = port
         # BLE Client configuration and start scanning
         self.get_module_info()
@@ -65,6 +67,7 @@ class Dongle(BlueGigaClient):
         self.delete_bonding()
         self.allow_bonding()
 
+        #self.pipe_logs_to_terminal(level=logging.DEBUG)
 
         self.connections = {}
 

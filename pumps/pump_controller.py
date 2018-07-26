@@ -16,7 +16,7 @@ class PumpController:
         self.callback = callback
         self.CFG = CFG
 
-        self.harvard = HarvardController(callback, ip=CFG["harvard controller ip"], port=int(CFG["harvard controller port"]))
+#        self.harvard = HarvardController(callback, ip=CFG["harvard controller ip"], port=int(CFG["harvard controller port"]))
         self.milligat = MilligatController(callback, ip=CFG["milligat controller ip"], port=int(CFG["milligat controller port"]))
 
 
@@ -51,5 +51,5 @@ class PumpController:
             print 'Tube type not found, should be harvard or milligat. Check config file.'
         
     def stop(self):
-        self.harvard.close()
+     #   self.harvard.close()
         self.milligat.stop()

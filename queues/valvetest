@@ -1,0 +1,13 @@
+Step,Action,Arg1,Arg2,Arg3
+
+# Link Reactor 2 to bay (0; 1)
+1,WASHVALVESON
+
+# Wait 3 seconds for jaw to close and for PSoC to power up
+4,TIMEOUT,3000
+
+# Initiate Bluetooth connection
+5,WASHVALVESOFF
+
+
+
